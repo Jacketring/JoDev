@@ -94,7 +94,7 @@ describe('EntityPage', () => {
 
         expect(await screen.findByText('Ana Lopez')).toBeInTheDocument();
 
-        fireEvent.change(screen.getByPlaceholderText('Nombre, empresa, email o teléfono'), {
+        fireEvent.change(screen.getByPlaceholderText('Nombre, empresa, email o telefono'), {
             target: { value: 'Acme' },
         });
 

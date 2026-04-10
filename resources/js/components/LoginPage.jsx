@@ -46,7 +46,7 @@ export default function LoginPage({ onSubmit, isPending, error }) {
                                 Gestion comercial con presencia, control y continuidad.
                             </h1>
                             <p className="mt-6 max-w-xl text-base leading-8 text-[var(--color-muted)] md:text-lg">
-                                JoDev centraliza relaciones, seguimiento y operativa comercial en un entorno sobrio,
+                                JoDev concentra clientes, accesos y configuracion del entorno en un espacio sobrio,
                                 claro y preparado para trabajo real.
                             </p>
                         </div>
@@ -67,7 +67,7 @@ export default function LoginPage({ onSubmit, isPending, error }) {
                             <BrandFact
                                 label="Cobertura"
                                 value="CRM"
-                                note="Clientes, oportunidades, actividades y tareas en la misma plataforma."
+                                note="Clientes, accesos y ajustes visuales dentro de la misma plataforma."
                             />
                         </div>
                     </div>

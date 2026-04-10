@@ -1,44 +1,29 @@
 import { Suspense, lazy } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
-import { moduleConfigs } from '../config/crmConfig';
 import { buildVisualTheme, normalizeVisualSettings } from '../config/visualSettingsConfig';
 import { fetchVisualSettings, updateVisualSettings } from '../services/crmApi';
 import BrandSignature from './BrandSignature';
 import {
     ClientDashboardSkeleton,
     CompanyPageSkeleton,
-    EntityRouteSkeleton,
-    FollowUpColumnSkeleton,
     SettingsRouteSkeleton,
 } from './LoadingSkeletons';
 
 const ClientCompanyPage = lazy(() => import('../pages/ClientCompanyPage'));
 const ClientDashboardPage = lazy(() => import('../pages/ClientDashboardPage'));
-const ClientFollowUpPage = lazy(() => import('../pages/ClientFollowUpPage'));
 const VisualSettingsPage = lazy(() => import('../pages/VisualSettingsPage'));
-const EntityPage = lazy(() => import('./EntityPage'));
 
 const sectionMeta = {
     dashboard: {
         title: 'Portal cliente',
         eyebrow: 'Tu cuenta',
-        description: 'Resumen ejecutivo de tu empresa, el pipeline visible y las siguientes acciones preparadas.',
+        description: 'Resumen limpio de tu empresa vinculada, acceso a la ficha principal y ajustes personales.',
     },
     'mi-empresa': {
         title: 'Mi empresa',
         eyebrow: 'Ficha corporativa',
         description: 'Actualiza tus datos de contacto y presencia digital sin tocar la estructura interna del CRM.',
-    },
-    'mi-equipo': {
-        title: 'Mi equipo',
-        eyebrow: 'Contactos de tu cuenta',
-        description: 'Gestiona las personas vinculadas a tu empresa para que el seguimiento no dependa de un solo interlocutor.',
-    },
-    seguimiento: {
-        title: 'Seguimiento',
-        eyebrow: 'Lectura comercial',
-        description: 'Consulta oportunidades, actividades y tareas relacionadas con tu empresa desde una vista clara y segura.',
     },
     ajustes: {
         title: 'Ajustes visuales',
@@ -85,11 +70,11 @@ export default function ClientShell({ user, onLogout, logoutPending }) {
                         <div className="max-w-3xl">
                             <BrandSignature size="hero" subtitle="Portal de cliente" />
                             <h1 className="mt-6 font-[var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--color-ink)] md:text-[3.4rem]">
-                                Un acceso limpio para seguir tu cuenta sin entrar en la operativa interna.
+                                Un acceso limpio para revisar tu empresa sin entrar en la operativa interna.
                             </h1>
                             <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--color-muted)] md:text-base">
-                                Tu espacio muestra solo lo que afecta a {companyName}: equipo de contacto,
-                                estado comercial y ajustes personales de visualizacion.
+                                Tu espacio queda centrado en {companyName}: la ficha principal de la cuenta y tus
+                                ajustes personales de visualizacion.
                             </p>
                         </div>
 
@@ -117,8 +102,6 @@ export default function ClientShell({ user, onLogout, logoutPending }) {
                     <nav className="panel-surface client-nav">
                         <ClientNavLink to="/dashboard" label="Portal" hint="Resumen" />
                         <ClientNavLink to="/mi-empresa" label="Mi empresa" hint="Ficha" />
-                        <ClientNavLink to="/mi-equipo" label="Mi equipo" hint="Contactos" />
-                        <ClientNavLink to="/seguimiento" label="Seguimiento" hint="Pipeline" />
                         <ClientNavLink to="/ajustes" label="Ajustes" hint="Visuales" />
                     </nav>
                 </div>
@@ -142,40 +125,6 @@ export default function ClientShell({ user, onLogout, logoutPending }) {
                                 <ClientSection sectionKey="mi-empresa">
                                     <Suspense fallback={<CompanyPageSkeleton />}>
                                         <ClientCompanyPage user={user} />
-                                    </Suspense>
-                                </ClientSection>
-                            }
-                        />
-                        <Route
-                            path="/mi-equipo"
-                            element={
-                                <ClientSection sectionKey="mi-equipo">
-                                    <Suspense
-                                        fallback={
-                                            <EntityRouteSkeleton
-                                                columns={moduleConfigs.contactos.columns.length + 1}
-                                            />
-                                        }
-                                    >
-                                        <EntityPage config={moduleConfigs.contactos} />
-                                    </Suspense>
-                                </ClientSection>
-                            }
-                        />
-                        <Route
-                            path="/seguimiento"
-                            element={
-                                <ClientSection sectionKey="seguimiento">
-                                    <Suspense
-                                        fallback={
-                                            <div className="grid gap-4 xl:grid-cols-3">
-                                                <FollowUpColumnSkeleton />
-                                                <FollowUpColumnSkeleton />
-                                                <FollowUpColumnSkeleton />
-                                            </div>
-                                        }
-                                    >
-                                        <ClientFollowUpPage />
                                     </Suspense>
                                 </ClientSection>
                             }
@@ -230,7 +179,9 @@ function ClientNavLink({ to, label, hint }) {
     return (
         <NavLink
             to={to}
-            className={({ isActive }) => `nav-pill nav-pill-stack client-nav-pill ${isActive ? 'nav-pill-active' : ''}`}
+            className={({ isActive }) =>
+                `nav-pill nav-pill-stack client-nav-pill ${isActive ? 'nav-pill-active' : ''}`
+            }
         >
             <span className="text-[15px] font-semibold text-[var(--color-ink)]">{label}</span>
             <span className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[var(--color-muted)]">

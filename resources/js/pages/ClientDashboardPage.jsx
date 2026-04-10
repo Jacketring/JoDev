@@ -1,15 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ClientDashboardSkeleton } from '../components/LoadingSkeletons';
-import { fetchDashboard } from '../services/crmApi';
-import { formatCurrency, formatDateTime, titleize } from '../utils/formatters';
+import { titleize } from '../utils/formatters';
 
 export default function ClientDashboardPage({ user }) {
-    const dashboardQuery = useQuery({
-        queryKey: ['dashboard'],
-        queryFn: fetchDashboard,
-    });
-
     if (!user.cliente_id) {
         return (
             <div className="panel-surface p-8">
@@ -24,12 +16,8 @@ export default function ClientDashboardPage({ user }) {
         );
     }
 
-    if (dashboardQuery.isPending) {
-        return <ClientDashboardSkeleton />;
-    }
-
-    const data = dashboardQuery.data;
     const companyName = user.cliente?.empresa ?? user.cliente?.nombre_completo ?? 'Tu empresa';
+    const companyState = titleize(user.cliente?.estado ?? 'activo');
 
     return (
         <section className="space-y-5">
@@ -43,11 +31,11 @@ export default function ClientDashboardPage({ user }) {
                     <div className="max-w-3xl">
                         <p className="brand-chip">Portal cliente</p>
                         <h2 className="mt-4 font-[var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--color-ink)]">
-                            Seguimiento claro para {companyName}.
+                            Acceso centrado en {companyName}.
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-[var(--color-muted)] md:text-base">
-                            Aqui ves el estado comercial de tu cuenta, el pipeline abierto y las proximas
-                            interacciones preparadas por JoDev.
+                            Este portal queda reducido a la ficha principal de tu empresa y a tus ajustes
+                            personales, sin exponer la operativa interna del CRM.
                         </p>
                     </div>
 
@@ -55,118 +43,78 @@ export default function ClientDashboardPage({ user }) {
                         <QuickAction
                             to="/mi-empresa"
                             title="Mi empresa"
-                            copy="Actualiza datos de contacto y presencia corporativa."
+                            copy="Actualiza datos corporativos y canales de contacto."
                         />
                         <QuickAction
-                            to="/seguimiento"
-                            title="Seguimiento"
-                            copy="Consulta oportunidades, actividades y tareas de tu cuenta."
+                            to="/ajustes"
+                            title="Ajustes"
+                            copy="Personaliza el entorno visual de tu cuenta."
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-                <MetricCard label="Oportunidades abiertas" value={data.metricas.oportunidades_abiertas} />
-                <MetricCard label="Valor en pipeline" value={formatCurrency(data.metricas.valor_pipeline)} />
-                <MetricCard label="Actividades proximas" value={data.metricas.actividades_proximas} />
-                <MetricCard label="Tareas pendientes" value={data.metricas.tareas_pendientes} />
+            <div className="grid gap-4 md:grid-cols-3">
+                <MetricCard label="Empresa vinculada" value={companyName} />
+                <MetricCard label="Estado comercial" value={companyState} />
+                <MetricCard label="Areas visibles" value="Portal, empresa y ajustes" />
             </div>
 
             <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
                 <div className="panel-surface p-6">
-                    <div className="flex items-center justify-between gap-3">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
-                                Pipeline
-                            </p>
-                            <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                                Estado de tus oportunidades
-                            </h3>
-                        </div>
-                        <span className="soft-badge">{data.embudo.length} fases activas</span>
-                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
+                        Resumen de cuenta
+                    </p>
+                    <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
+                        Tu espacio visible en JoDev
+                    </h3>
 
-                    <div className="mt-6 space-y-3">
-                        {data.embudo.length === 0 ? (
-                            <p className="text-sm leading-6 text-[var(--color-muted)]">
-                                No hay oportunidades abiertas ahora mismo.
-                            </p>
-                        ) : (
-                            data.embudo.map((fase) => (
-                                <div
-                                    key={fase.fase}
-                                    className="rounded-[var(--panel-secondary-radius)] border border-[var(--panel-line)] bg-[var(--panel-secondary-bg)] px-4 py-4"
-                                >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div>
-                                            <p className="font-semibold text-[var(--color-ink)]">
-                                                {titleize(fase.fase)}
-                                            </p>
-                                            <p className="mt-1 text-sm text-[var(--color-muted)]">
-                                                {fase.total} oportunidades
-                                            </p>
-                                        </div>
-                                        <p className="font-[var(--font-display)] text-xl font-semibold text-[var(--accent-strong)]">
-                                            {formatCurrency(fase.valor)}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        )}
+                    <div className="mt-6 grid gap-3">
+                        <InfoCard label="Empresa" value={companyName} />
+                        <InfoCard label="Usuario de acceso" value={user.name} />
+                        <InfoCard label="Email" value={user.email} />
+                        <InfoCard label="Rol" value="Cliente" />
                     </div>
                 </div>
 
                 <div className="grid gap-4">
                     <div className="panel-surface p-6">
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
-                            Agenda
+                            Producto visible
                         </p>
                         <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                            Proximas actividades
+                            Acceso simplificado
                         </h3>
 
                         <div className="mt-6 space-y-3">
-                            {data.actividades_proximas.length === 0 ? (
-                                <p className="text-sm leading-6 text-[var(--color-muted)]">
-                                    No hay actividades proximas en agenda.
-                                </p>
-                            ) : (
-                                data.actividades_proximas.slice(0, 4).map((item) => (
-                                    <FeedCard
-                                        key={item.id}
-                                        label={titleize(item.tipo)}
-                                        title={item.asunto}
-                                        meta={formatDateTime(item.fecha_actividad)}
-                                    />
-                                ))
-                            )}
+                            <FeedCard
+                                label="Ficha"
+                                title="Mi empresa"
+                                meta="Datos corporativos y contacto principal"
+                            />
+                            <FeedCard
+                                label="Preferencias"
+                                title="Ajustes"
+                                meta="Personalizacion visual segura"
+                            />
                         </div>
                     </div>
 
                     <div className="panel-surface p-6">
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
-                            Alertas
+                            Siguiente paso
                         </p>
                         <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                            Tareas que requieren atencion
+                            Mantener la ficha al dia
                         </h3>
 
-                        <div className="mt-6 space-y-3">
-                            {data.tareas_vencidas.length === 0 ? (
-                                <p className="text-sm leading-6 text-[var(--color-muted)]">
-                                    No hay tareas vencidas para tu cuenta.
-                                </p>
-                            ) : (
-                                data.tareas_vencidas.slice(0, 4).map((item) => (
-                                    <FeedCard
-                                        key={item.id}
-                                        label={titleize(item.prioridad)}
-                                        title={item.titulo}
-                                        meta={formatDateTime(item.fecha_vencimiento)}
-                                    />
-                                ))
-                            )}
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            <Link to="/mi-empresa" className="primary-button">
+                                Abrir mi empresa
+                            </Link>
+                            <Link to="/ajustes" className="ghost-button">
+                                Abrir ajustes
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -190,10 +138,24 @@ function MetricCard({ label, value }) {
 
 function QuickAction({ to, title, copy }) {
     return (
-        <Link to={to} className="rounded-[var(--panel-secondary-radius)] border border-[var(--panel-border)] bg-[var(--panel-secondary-bg)] px-4 py-4 shadow-[var(--panel-shadow-soft)] transition hover:-translate-y-[1px]">
+        <Link
+            to={to}
+            className="rounded-[var(--panel-secondary-radius)] border border-[var(--panel-border)] bg-[var(--panel-secondary-bg)] px-4 py-4 shadow-[var(--panel-shadow-soft)] transition hover:-translate-y-[1px]"
+        >
             <p className="font-semibold text-[var(--color-ink)]">{title}</p>
             <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{copy}</p>
         </Link>
+    );
+}
+
+function InfoCard({ label, value }) {
+    return (
+        <div className="rounded-[var(--panel-secondary-radius)] border border-[var(--panel-line)] bg-[var(--panel-secondary-bg)] px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                {label}
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[var(--color-ink)]">{value}</p>
+        </div>
     );
 }
 

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { DashboardSkeleton } from '../components/LoadingSkeletons';
 import { fetchDashboard } from '../services/crmApi';
-import { formatCurrency, formatDateTime, formatRelationLabel, titleize } from '../utils/formatters';
+import { formatDateTime, formatRelationLabel, titleize } from '../utils/formatters';
 
 export default function DashboardPage() {
     const dashboardQuery = useQuery({
@@ -15,36 +15,9 @@ export default function DashboardPage() {
     }
 
     const data = dashboardQuery.data;
-    const hasWorkspaceData =
-        data.metricas.clientes_activos > 0 ||
-        data.metricas.oportunidades_abiertas > 0 ||
-        data.metricas.tareas_pendientes > 0 ||
-        data.metricas.actividades_proximas > 0 ||
-        data.metricas.valor_pipeline > 0 ||
-        data.embudo.length > 0 ||
-        data.tareas_vencidas.length > 0 ||
-        data.actividades_proximas.length > 0 ||
-        data.oportunidades_recientes.length > 0;
-
-    const attentionItems = [
-        ...data.tareas_vencidas.slice(0, 3).map((item) => ({
-            id: `task-${item.id}`,
-            label: 'Tarea vencida',
-            title: item.titulo,
-            subtitle: formatRelationLabel(
-                item.cliente?.empresa ?? item.cliente?.nombre_completo,
-                item.contacto?.nombre_completo,
-            ),
-            meta: formatDateTime(item.fecha_vencimiento),
-        })),
-        ...data.actividades_proximas.slice(0, 3).map((item) => ({
-            id: `activity-${item.id}`,
-            label: titleize(item.tipo),
-            title: item.asunto,
-            subtitle: item.cliente?.empresa ?? item.cliente?.nombre_completo ?? 'Sin cliente',
-            meta: formatDateTime(item.fecha_actividad),
-        })),
-    ].slice(0, 5);
+    const recentClients = data.clientes_recientes ?? [];
+    const activeClients = data.metricas.clientes_activos ?? 0;
+    const hasWorkspaceData = activeClients > 0 || recentClients.length > 0;
 
     return (
         <section className="flex min-h-[calc(100vh-12rem)] flex-col gap-4">
@@ -57,64 +30,51 @@ export default function DashboardPage() {
 
                     <div className="relative">
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                            Resumen ejecutivo
+                            Resumen operativo
                         </p>
                         <h2 className="mt-4 max-w-2xl font-[var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--color-ink)] md:text-[3.2rem]">
-                            Estado comercial en una sola vista.
+                            El CRM queda centrado en clientes y control interno.
                         </h2>
                         <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--color-muted)] md:text-base">
-                            Menos bloques, menos ruido y mas foco en lo que importa: base activa, pipeline y
-                            seguimiento inmediato.
+                            Menos ruido visual y un flujo mas directo: base de clientes, gestion de accesos y
+                            configuracion del entorno.
                         </p>
 
                         <div className="mt-8 grid gap-3 md:grid-cols-3">
                             <HeroStat
                                 label="Clientes activos"
-                                value={data.metricas.clientes_activos}
-                                note="Base comercial operativa"
+                                value={activeClients}
+                                note="Base comercial disponible"
                             />
                             <HeroStat
-                                label="Pipeline abierto"
-                                value={formatCurrency(data.metricas.valor_pipeline)}
-                                note="Valor total en curso"
+                                label="Registros recientes"
+                                value={recentClients.length}
+                                note="Ultimas altas visibles"
                             />
                             <HeroStat
-                                label="Tareas pendientes"
-                                value={data.metricas.tareas_pendientes}
-                                note="Seguimiento por resolver"
+                                label="Modulos visibles"
+                                value="3"
+                                note="Clientes, usuarios y ajustes"
                             />
                         </div>
 
                         <div className="mt-6 flex flex-wrap gap-2">
-                            <span className="soft-badge">
-                                {data.metricas.oportunidades_abiertas} oportunidades abiertas
-                            </span>
-                            <span className="soft-badge">
-                                {data.metricas.actividades_proximas} actividades proximas
-                            </span>
-                            <span className="soft-badge">{data.embudo.length} fases activas</span>
+                            <span className="soft-badge">Clientes</span>
+                            <span className="soft-badge">Usuarios</span>
+                            <span className="soft-badge">Ajustes</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel-surface p-6 md:p-7">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                        Ritmo del dia
+                        Ruta actual
                     </p>
 
                     <div className="mt-6 grid gap-3">
-                        <CompactStat
-                            label="Oportunidades abiertas"
-                            value={data.metricas.oportunidades_abiertas}
-                        />
-                        <CompactStat
-                            label="Actividades proximas"
-                            value={data.metricas.actividades_proximas}
-                        />
-                        <CompactStat
-                            label="Tareas vencidas"
-                            value={data.tareas_vencidas.length}
-                        />
+                        <CompactStat label="Vista principal" value="Clientes" />
+                        <CompactStat label="Accesos internos" value="Usuarios" />
+                        <CompactStat label="Configuracion" value="Ajustes" />
                     </div>
                 </div>
             </div>
@@ -130,8 +90,8 @@ export default function DashboardPage() {
                                 El CRM esta listo para empezar.
                             </h3>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--color-muted)] md:text-base">
-                                No hay datos cargados todavia. Empieza creando la base comercial y el dashboard
-                                se ira llenando solo con actividad real.
+                                No hay clientes cargados todavia. Empieza creando la base principal y gestiona los
+                                accesos desde el modulo de usuarios.
                             </p>
                         </div>
 
@@ -139,8 +99,8 @@ export default function DashboardPage() {
                             <Link to="/clientes" className="primary-button">
                                 Crear primer cliente
                             </Link>
-                            <Link to="/oportunidades" className="ghost-button">
-                                Crear oportunidad
+                            <Link to="/usuarios" className="ghost-button">
+                                Revisar usuarios
                             </Link>
                         </div>
                     </div>
@@ -151,27 +111,28 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                                    Pipeline
+                                    Clientes recientes
                                 </p>
                                 <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                                    Distribucion por fase
+                                    Ultimos registros incorporados
                                 </h3>
                             </div>
-                            <span className="soft-badge">{data.embudo.length} activas</span>
+                            <span className="soft-badge">{recentClients.length} visibles</span>
                         </div>
 
-                        <div className="mt-6 space-y-4">
-                            {data.embudo.length === 0 ? (
+                        <div className="mt-6 space-y-3">
+                            {recentClients.length === 0 ? (
                                 <p className="text-sm leading-6 text-[var(--color-muted)]">
-                                    Aun no hay movimiento en el pipeline.
+                                    Aun no hay clientes recientes para mostrar.
                                 </p>
                             ) : (
-                                data.embudo.map((fase) => (
-                                    <PipelineRow
-                                        key={fase.fase}
-                                        label={titleize(fase.fase)}
-                                        count={fase.total}
-                                        value={formatCurrency(fase.valor)}
+                                recentClients.map((client) => (
+                                    <ClientTimelineItem
+                                        key={client.id}
+                                        title={client.empresa ?? client.nombre_completo}
+                                        subtitle={formatRelationLabel(client.nombre_completo, client.email)}
+                                        meta={formatDateTime(client.created_at)}
+                                        status={titleize(client.estado)}
                                     />
                                 ))
                             )}
@@ -181,59 +142,52 @@ export default function DashboardPage() {
                     <div className="grid gap-4">
                         <div className="panel-surface p-6">
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                                Atencion inmediata
+                                Enfoque activo
                             </p>
                             <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                                Agenda y alertas
+                                Producto simplificado
                             </h3>
 
                             <div className="mt-6 space-y-3">
-                                {attentionItems.length === 0 ? (
-                                    <p className="text-sm leading-6 text-[var(--color-muted)]">
-                                        No hay alertas ni actividad inmediata en este momento.
-                                    </p>
-                                ) : (
-                                    attentionItems.map((item) => (
-                                        <TimelineItem
-                                            key={item.id}
-                                            label={item.label}
-                                            title={item.title}
-                                            subtitle={item.subtitle}
-                                            meta={item.meta}
-                                        />
-                                    ))
-                                )}
+                                <TimelineItem
+                                    label="Modulo principal"
+                                    title="Clientes"
+                                    subtitle="La operativa visible se concentra en la base comercial."
+                                    meta="Directorio activo"
+                                />
+                                <TimelineItem
+                                    label="Control interno"
+                                    title="Usuarios"
+                                    subtitle="Los accesos y roles siguen disponibles para administracion."
+                                    meta="Accesos"
+                                />
+                                <TimelineItem
+                                    label="Personalizacion"
+                                    title="Ajustes"
+                                    subtitle="El entorno visual permanece accesible sin tocar datos operativos."
+                                    meta="Preferencias"
+                                />
                             </div>
                         </div>
 
                         <div className="panel-surface p-6">
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                                Movimiento reciente
+                                Acciones rapidas
                             </p>
                             <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                                Ultimas oportunidades
+                                Siguiente paso
                             </h3>
 
-                            <div className="mt-6 space-y-3">
-                                {data.oportunidades_recientes.length === 0 ? (
-                                    <p className="text-sm leading-6 text-[var(--color-muted)]">
-                                        Aun no hay oportunidades registradas.
-                                    </p>
-                                ) : (
-                                    data.oportunidades_recientes.slice(0, 4).map((item) => (
-                                        <TimelineItem
-                                            key={item.id}
-                                            label={titleize(item.fase)}
-                                            title={item.titulo}
-                                            subtitle={
-                                                item.cliente?.empresa ??
-                                                item.cliente?.nombre_completo ??
-                                                'Sin cliente'
-                                            }
-                                            meta={formatCurrency(item.valor_estimado)}
-                                        />
-                                    ))
-                                )}
+                            <div className="mt-6 flex flex-wrap gap-3">
+                                <Link to="/clientes" className="primary-button">
+                                    Abrir clientes
+                                </Link>
+                                <Link to="/usuarios" className="ghost-button">
+                                    Abrir usuarios
+                                </Link>
+                                <Link to="/ajustes" className="ghost-button">
+                                    Abrir ajustes
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -270,24 +224,19 @@ function CompactStat({ label, value }) {
     );
 }
 
-function PipelineRow({ label, count, value }) {
+function ClientTimelineItem({ title, subtitle, meta, status }) {
     return (
-        <div className="rounded-[26px] border border-[var(--panel-line)] bg-[var(--panel-secondary-bg)] p-4">
-            <div className="flex items-center justify-between gap-3">
+        <div className="rounded-[24px] border border-[var(--panel-line)] bg-[var(--panel-secondary-bg)] px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
                 <div>
-                    <p className="font-semibold text-[var(--color-ink)]">{label}</p>
-                    <p className="mt-1 text-sm text-[var(--color-muted)]">{count} oportunidades</p>
+                    <p className="font-semibold text-[var(--color-ink)]">{title}</p>
+                    <p className="mt-1 text-sm text-[var(--color-muted)]">{subtitle}</p>
                 </div>
-                <p className="font-[var(--font-display)] text-xl font-semibold text-[var(--color-accent)]">
-                    {value}
-                </p>
+                <span className="soft-badge">{status}</span>
             </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--pipeline-track-bg)]">
-                <div
-                    className="h-full rounded-full bg-[var(--pipeline-bar-bg)]"
-                    style={{ width: `${Math.max(10, Math.min(100, count * 14))}%` }}
-                />
-            </div>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                {meta || 'Sin fecha'}
+            </p>
         </div>
     );
 }

@@ -195,8 +195,8 @@ export default function VisualSettingsPage({ settings, onSave, isSaving }) {
 
                                 <div className="grid gap-3 md:grid-cols-3">
                                     <PreviewMetric label="Clientes" value="128" />
-                                    <PreviewMetric label="Pipeline" value="42k" />
-                                    <PreviewMetric label="Tareas" value="9" />
+                                    <PreviewMetric label="Usuarios" value="12" />
+                                    <PreviewMetric label="Ajustes" value="11" />
                                 </div>
 
                                 <div className="panel-surface theme-block">

@@ -123,7 +123,9 @@ describe('ClientShell', () => {
 
         expect(await screen.findByRole('heading', { name: 'Portal cliente' })).toBeInTheDocument();
         expect(screen.getByText('Portal de cliente')).toBeInTheDocument();
-        expect(screen.getByText('Mi equipo')).toBeInTheDocument();
+        expect(screen.getByText('Mi empresa')).toBeInTheDocument();
+        expect(screen.getByText('Ajustes')).toBeInTheDocument();
+        expect(screen.queryByText('Mi equipo')).not.toBeInTheDocument();
         expect(screen.getAllByText('Cliente JoDev').length).toBeGreaterThan(0);
     });
 });

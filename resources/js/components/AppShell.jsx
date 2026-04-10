@@ -26,7 +26,7 @@ const sectionMeta = {
     dashboard: {
         title: 'Dashboard',
         eyebrow: 'JoDev CRM',
-        description: 'Vista general del estado comercial, el pipeline y las prioridades del momento.',
+        description: 'Vista general del area activa: clientes, accesos y configuracion del entorno.',
     },
     ajustes: {
         title: 'Ajustes visuales',
@@ -194,6 +194,7 @@ export default function AppShell({ user, onLogout, logoutPending }) {
                                         }
                                     />
                                 ))}
+                                <Route path="*" element={<Navigate replace to="/dashboard" />} />
                             </Routes>
                         </div>
                     </main>
