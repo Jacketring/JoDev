@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { FollowUpColumnSkeleton } from '../components/LoadingSkeletons';
 import { fetchCollection } from '../services/crmApi';
 import { formatCurrency, formatDateTime, titleize } from '../utils/formatters';
 
@@ -27,17 +28,6 @@ export default function ClientFollowUpPage() {
             }),
     });
 
-    const loading =
-        opportunitiesQuery.isPending || activitiesQuery.isPending || tasksQuery.isPending;
-
-    if (loading) {
-        return (
-            <div className="panel-surface p-8 text-sm text-[var(--color-muted)]">
-                Cargando seguimiento comercial...
-            </div>
-        );
-    }
-
     const opportunities = opportunitiesQuery.data?.data ?? [];
     const activities = activitiesQuery.data?.data ?? [];
     const tasks = tasksQuery.data?.data ?? [];
@@ -60,6 +50,7 @@ export default function ClientFollowUpPage() {
                     title="Oportunidades"
                     eyebrow="Pipeline"
                     emptyMessage="No hay oportunidades visibles para tu cuenta."
+                    isLoading={opportunitiesQuery.isPending}
                     items={opportunities}
                     renderItem={(item) => (
                         <FollowCard
@@ -75,6 +66,7 @@ export default function ClientFollowUpPage() {
                     title="Actividades"
                     eyebrow="Agenda"
                     emptyMessage="No hay actividades registradas."
+                    isLoading={activitiesQuery.isPending}
                     items={activities}
                     renderItem={(item) => (
                         <FollowCard
@@ -90,6 +82,7 @@ export default function ClientFollowUpPage() {
                     title="Tareas"
                     eyebrow="Operativa"
                     emptyMessage="No hay tareas visibles para tu cuenta."
+                    isLoading={tasksQuery.isPending}
                     items={tasks}
                     renderItem={(item) => (
                         <FollowCard
@@ -106,7 +99,11 @@ export default function ClientFollowUpPage() {
     );
 }
 
-function FollowColumn({ eyebrow, title, items, emptyMessage, renderItem }) {
+function FollowColumn({ eyebrow, title, items, emptyMessage, isLoading, renderItem }) {
+    if (isLoading) {
+        return <FollowUpColumnSkeleton />;
+    }
+
     return (
         <div className="panel-surface p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">

@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { moduleConfigs, moduleOrder } from '../config/crmConfig';
@@ -10,10 +11,16 @@ import {
     updateVisualSettings,
 } from '../services/crmApi';
 import BrandSignature from './BrandSignature';
-import EntityPage from './EntityPage';
-import DashboardPage from '../pages/DashboardPage';
-import UserManagementPage from '../pages/UserManagementPage';
-import VisualSettingsPage from '../pages/VisualSettingsPage';
+import {
+    DashboardSkeleton,
+    EntityRouteSkeleton,
+    SettingsRouteSkeleton,
+} from './LoadingSkeletons';
+
+const EntityPage = lazy(() => import('./EntityPage'));
+const DashboardPage = lazy(() => import('../pages/DashboardPage'));
+const UserManagementPage = lazy(() => import('../pages/UserManagementPage'));
+const VisualSettingsPage = lazy(() => import('../pages/VisualSettingsPage'));
 
 const sectionMeta = {
     dashboard: {
@@ -136,12 +143,21 @@ export default function AppShell({ user, onLogout, logoutPending }) {
                         <div className="workspace-route">
                             <Routes>
                                 <Route path="/" element={<Navigate replace to="/dashboard" />} />
-                                <Route path="/dashboard" element={<DashboardPage />} />
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <Suspense fallback={<DashboardSkeleton />}>
+                                            <DashboardPage />
+                                        </Suspense>
+                                    }
+                                />
                                 <Route
                                     path="/usuarios"
                                     element={
                                         user.role === 'administrador' ? (
-                                            <UserManagementPage currentUser={user} />
+                                            <Suspense fallback={<EntityRouteSkeleton columns={4} />}>
+                                                <UserManagementPage currentUser={user} />
+                                            </Suspense>
                                         ) : (
                                             <Navigate replace to="/dashboard" />
                                         )
@@ -150,20 +166,32 @@ export default function AppShell({ user, onLogout, logoutPending }) {
                                 <Route
                                     path="/ajustes"
                                     element={
-                                        <VisualSettingsPage
-                                            settings={visualSettings}
-                                            onSave={(payload) =>
-                                                visualSettingsMutation.mutateAsync(payload)
-                                            }
-                                            isSaving={visualSettingsMutation.isPending}
-                                        />
+                                        <Suspense fallback={<SettingsRouteSkeleton />}>
+                                            <VisualSettingsPage
+                                                settings={visualSettings}
+                                                onSave={(payload) =>
+                                                    visualSettingsMutation.mutateAsync(payload)
+                                                }
+                                                isSaving={visualSettingsMutation.isPending}
+                                            />
+                                        </Suspense>
                                     }
                                 />
                                 {moduleOrder.map((key) => (
                                     <Route
                                         key={key}
                                         path={`/${key}`}
-                                        element={<EntityPage config={moduleConfigs[key]} />}
+                                        element={
+                                            <Suspense
+                                                fallback={
+                                                    <EntityRouteSkeleton
+                                                        columns={moduleConfigs[key].columns.length + 1}
+                                                    />
+                                                }
+                                            >
+                                                <EntityPage config={moduleConfigs[key]} />
+                                            </Suspense>
+                                        }
                                     />
                                 ))}
                             </Routes>

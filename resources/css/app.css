@@ -434,6 +434,27 @@
     .panel-enter {
         animation: panel-in var(--motion-duration) var(--motion-easing);
     }
+
+    .loading-skeleton {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--pill-radius);
+        background: color-mix(in srgb, var(--panel-highlight) 84%, var(--panel-secondary-bg));
+        opacity: 0.88;
+    }
+
+    .loading-skeleton::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.52), transparent);
+        animation: loading-sheen 1.35s linear infinite;
+    }
+
+    .loading-skeleton-block {
+        border-radius: var(--panel-secondary-radius);
+    }
 }
 
 @media (min-width: 1280px) {
@@ -473,5 +494,11 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes loading-sheen {
+    to {
+        transform: translateX(100%);
     }
 }

@@ -1,14 +1,23 @@
+import { Suspense, lazy } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import { moduleConfigs } from '../config/crmConfig';
 import { buildVisualTheme, normalizeVisualSettings } from '../config/visualSettingsConfig';
-import ClientCompanyPage from '../pages/ClientCompanyPage';
-import ClientDashboardPage from '../pages/ClientDashboardPage';
-import ClientFollowUpPage from '../pages/ClientFollowUpPage';
-import VisualSettingsPage from '../pages/VisualSettingsPage';
 import { fetchVisualSettings, updateVisualSettings } from '../services/crmApi';
 import BrandSignature from './BrandSignature';
-import EntityPage from './EntityPage';
+import {
+    ClientDashboardSkeleton,
+    CompanyPageSkeleton,
+    EntityRouteSkeleton,
+    FollowUpColumnSkeleton,
+    SettingsRouteSkeleton,
+} from './LoadingSkeletons';
+
+const ClientCompanyPage = lazy(() => import('../pages/ClientCompanyPage'));
+const ClientDashboardPage = lazy(() => import('../pages/ClientDashboardPage'));
+const ClientFollowUpPage = lazy(() => import('../pages/ClientFollowUpPage'));
+const VisualSettingsPage = lazy(() => import('../pages/VisualSettingsPage'));
+const EntityPage = lazy(() => import('./EntityPage'));
 
 const sectionMeta = {
     dashboard: {
@@ -117,19 +126,71 @@ export default function ClientShell({ user, onLogout, logoutPending }) {
                 <div className="panel-surface client-route-shell">
                     <Routes>
                         <Route path="/" element={<Navigate replace to="/dashboard" />} />
-                        <Route path="/dashboard" element={<ClientSection sectionKey="dashboard"><ClientDashboardPage user={user} /></ClientSection>} />
-                        <Route path="/mi-empresa" element={<ClientSection sectionKey="mi-empresa"><ClientCompanyPage user={user} /></ClientSection>} />
-                        <Route path="/mi-equipo" element={<ClientSection sectionKey="mi-equipo"><EntityPage config={moduleConfigs.contactos} /></ClientSection>} />
-                        <Route path="/seguimiento" element={<ClientSection sectionKey="seguimiento"><ClientFollowUpPage /></ClientSection>} />
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ClientSection sectionKey="dashboard">
+                                    <Suspense fallback={<ClientDashboardSkeleton />}>
+                                        <ClientDashboardPage user={user} />
+                                    </Suspense>
+                                </ClientSection>
+                            }
+                        />
+                        <Route
+                            path="/mi-empresa"
+                            element={
+                                <ClientSection sectionKey="mi-empresa">
+                                    <Suspense fallback={<CompanyPageSkeleton />}>
+                                        <ClientCompanyPage user={user} />
+                                    </Suspense>
+                                </ClientSection>
+                            }
+                        />
+                        <Route
+                            path="/mi-equipo"
+                            element={
+                                <ClientSection sectionKey="mi-equipo">
+                                    <Suspense
+                                        fallback={
+                                            <EntityRouteSkeleton
+                                                columns={moduleConfigs.contactos.columns.length + 1}
+                                            />
+                                        }
+                                    >
+                                        <EntityPage config={moduleConfigs.contactos} />
+                                    </Suspense>
+                                </ClientSection>
+                            }
+                        />
+                        <Route
+                            path="/seguimiento"
+                            element={
+                                <ClientSection sectionKey="seguimiento">
+                                    <Suspense
+                                        fallback={
+                                            <div className="grid gap-4 xl:grid-cols-3">
+                                                <FollowUpColumnSkeleton />
+                                                <FollowUpColumnSkeleton />
+                                                <FollowUpColumnSkeleton />
+                                            </div>
+                                        }
+                                    >
+                                        <ClientFollowUpPage />
+                                    </Suspense>
+                                </ClientSection>
+                            }
+                        />
                         <Route
                             path="/ajustes"
                             element={
                                 <ClientSection sectionKey="ajustes">
-                                    <VisualSettingsPage
-                                        settings={visualSettings}
-                                        onSave={(payload) => visualSettingsMutation.mutateAsync(payload)}
-                                        isSaving={visualSettingsMutation.isPending}
-                                    />
+                                    <Suspense fallback={<SettingsRouteSkeleton />}>
+                                        <VisualSettingsPage
+                                            settings={visualSettings}
+                                            onSave={(payload) => visualSettingsMutation.mutateAsync(payload)}
+                                            isSaving={visualSettingsMutation.isPending}
+                                        />
+                                    </Suspense>
                                 </ClientSection>
                             }
                         />

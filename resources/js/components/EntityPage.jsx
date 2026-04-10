@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { startTransition, useDeferredValue, useState } from 'react';
 import {
     archiveRecord,
@@ -17,6 +17,7 @@ import {
     toDateInputValue,
     toDateTimeInputValue,
 } from '../utils/formatters';
+import { DetailPanelSkeleton, LoadingTableRows } from './LoadingSkeletons';
 
 export default function EntityPage({ config }) {
     const queryClient = useQueryClient();
@@ -32,6 +33,7 @@ export default function EntityPage({ config }) {
     const listQuery = useQuery({
         queryKey: [config.key, 'list', { ...filters, search: deferredSearch }],
         queryFn: () => fetchCollection(config.endpoint, { ...filters, search: deferredSearch }),
+        placeholderData: keepPreviousData,
     });
 
     const optionsQuery = useQuery({
@@ -83,6 +85,8 @@ export default function EntityPage({ config }) {
     const meta = listQuery.data?.meta;
     const options = optionsQuery.data;
     const selectedRecord = detailQuery.data ?? items.find((item) => item.id === selectedId) ?? null;
+    const showInitialListLoad = listQuery.isPending && !listQuery.data;
+    const showDetailLoad = selectedId && detailQuery.isPending && !detailQuery.data;
 
     function updateFilter(name, value) {
         startTransition(() => {
@@ -150,7 +154,7 @@ export default function EntityPage({ config }) {
     }
 
     async function handleArchive(record) {
-        if (!window.confirm(`¿Archivar ${config.getRecordTitle(record)}?`)) {
+        if (!window.confirm(`Archivar ${config.getRecordTitle(record)}?`)) {
             return;
         }
 
@@ -176,18 +180,20 @@ export default function EntityPage({ config }) {
                         ))}
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={openCreateForm}
-                        className="primary-button"
-                    >
+                    <button type="button" onClick={openCreateForm} className="primary-button">
                         Nuevo {singularLabel}
                     </button>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between text-xs text-[var(--color-muted)]">
                     <span>{meta ? `${meta.total} registros en esta vista` : 'Cargando registros...'}</span>
-                    <span>{listQuery.isFetching ? 'Actualizando...' : 'Sincronizado con la API'}</span>
+                    <span>
+                        {optionsQuery.isFetching
+                            ? 'Cargando catalogos...'
+                            : listQuery.isFetching
+                              ? 'Actualizando por bloques...'
+                              : 'Sincronizado con la API'}
+                    </span>
                 </div>
             </div>
 
@@ -206,15 +212,14 @@ export default function EntityPage({ config }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {listQuery.isPending ? (
-                                    <tr>
-                                        <td colSpan={config.columns.length + 1} className="px-5 py-12 text-center text-sm text-[var(--color-muted)]">
-                                            Cargando módulo...
-                                        </td>
-                                    </tr>
+                                {showInitialListLoad ? (
+                                    <LoadingTableRows columns={config.columns.length + 1} />
                                 ) : items.length === 0 ? (
                                     <tr>
-                                        <td colSpan={config.columns.length + 1} className="px-5 py-12 text-center text-sm text-[var(--color-muted)]">
+                                        <td
+                                            colSpan={config.columns.length + 1}
+                                            className="px-5 py-12 text-center text-sm text-[var(--color-muted)]"
+                                        >
                                             {config.emptyState}
                                         </td>
                                     </tr>
@@ -264,7 +269,7 @@ export default function EntityPage({ config }) {
                     {meta ? (
                         <div className="flex items-center justify-between border-t border-[var(--color-line)] bg-[var(--color-surface)] px-5 py-4 text-sm text-[var(--color-muted)]">
                             <span>
-                                Página {meta.current_page} de {meta.last_page}
+                                Pagina {meta.current_page} de {meta.last_page}
                             </span>
                             <div className="flex gap-2">
                                 <button
@@ -289,8 +294,8 @@ export default function EntityPage({ config }) {
                 </div>
 
                 <aside className="panel-surface min-h-[320px] p-5">
-                    {selectedId && detailQuery.isPending ? (
-                        <p className="text-sm text-[var(--color-muted)]">Cargando detalle...</p>
+                    {showDetailLoad ? (
+                        <DetailPanelSkeleton />
                     ) : selectedRecord ? (
                         <div className="space-y-6">
                             <div>
@@ -307,7 +312,10 @@ export default function EntityPage({ config }) {
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                                 {config.fields.map((field) => (
-                                    <div key={field.name} className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3">
+                                    <div
+                                        key={field.name}
+                                        className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3"
+                                    >
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
                                             {field.label}
                                         </p>
@@ -333,7 +341,9 @@ export default function EntityPage({ config }) {
                                             </div>
                                         ))}
                                         {(selectedRecord[section.key] ?? []).length === 0 ? (
-                                            <p className="text-sm text-[var(--color-muted)]">Sin elementos vinculados.</p>
+                                            <p className="text-sm text-[var(--color-muted)]">
+                                                Sin elementos vinculados.
+                                            </p>
                                         ) : null}
                                     </div>
                                 </div>
@@ -345,7 +355,7 @@ export default function EntityPage({ config }) {
                                 Panel lateral
                             </p>
                             <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
-                                Selecciona una fila para ver el detalle completo sin salir del módulo.
+                                Selecciona una fila para ver el detalle completo sin salir del modulo.
                             </p>
                         </div>
                     )}
@@ -358,10 +368,12 @@ export default function EntityPage({ config }) {
                         <div className="flex items-center justify-between border-b border-[var(--color-line)] px-6 py-5">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                                    {editingRecord ? 'Edición' : 'Alta'}
+                                    {editingRecord ? 'Edicion' : 'Alta'}
                                 </p>
                                 <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                                    {editingRecord ? config.getRecordTitle(editingRecord) : `Nuevo ${singularLabel}`}
+                                    {editingRecord
+                                        ? config.getRecordTitle(editingRecord)
+                                        : `Nuevo ${singularLabel}`}
                                 </h3>
                             </div>
                             <button
@@ -389,7 +401,9 @@ export default function EntityPage({ config }) {
                                             onChange: updateField,
                                         })}
                                         {formErrors[field.name] ? (
-                                            <p className="mt-2 text-sm text-red-600">{formErrors[field.name][0]}</p>
+                                            <p className="mt-2 text-sm text-red-600">
+                                                {formErrors[field.name][0]}
+                                            </p>
                                         ) : null}
                                     </div>
                                 ))}
@@ -543,7 +557,7 @@ function renderFieldControl({ field, options, values, onChange }) {
                 onChange={(event) => onChange(field.name, event.target.value)}
                 className="form-input"
             >
-                <option value="">{field.required ? 'Selecciona una opción' : 'Sin asignar'}</option>
+                <option value="">{field.required ? 'Selecciona una opcion' : 'Sin asignar'}</option>
                 {choices.map((choice) => (
                     <option key={`${field.name}-${choice.value}`} value={choice.value}>
                         {choice.label}
@@ -566,11 +580,13 @@ function renderFieldControl({ field, options, values, onChange }) {
 
 function formatDetailValue(field, record) {
     if (field.type === 'checkbox') {
-        return record[field.name] ? 'Sí' : 'No';
+        return record[field.name] ? 'Si' : 'No';
     }
 
     if (field.name === 'cliente_id') {
-        return record.cliente ? formatRelationLabel(record.cliente.empresa, record.cliente.nombre_completo) : 'Sin asignar';
+        return record.cliente
+            ? formatRelationLabel(record.cliente.empresa, record.cliente.nombre_completo)
+            : 'Sin asignar';
     }
 
     if (field.name === 'contacto_id') {

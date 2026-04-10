@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { startTransition, useState } from 'react';
+import { DetailPanelSkeleton, LoadingTableRows } from '../components/LoadingSkeletons';
 import { createRecord, fetchCollection, fetchOptions, fetchRecord, updateRecord } from '../services/crmApi';
 import { formatDateTime, titleize } from '../utils/formatters';
 
@@ -30,6 +31,7 @@ export default function UserManagementPage({ currentUser }) {
     const usersQuery = useQuery({
         queryKey: ['usuarios', 'list', filters],
         queryFn: () => fetchCollection('/api/usuarios', filters),
+        placeholderData: keepPreviousData,
     });
 
     const optionsQuery = useQuery({
@@ -67,6 +69,8 @@ export default function UserManagementPage({ currentUser }) {
         label: cliente.empresa ?? cliente.nombre_completo,
     }));
     const selectedUser = detailQuery.data ?? users.find((item) => item.id === selectedId) ?? null;
+    const showInitialUsersLoad = usersQuery.isPending && !usersQuery.data;
+    const showUserDetailLoad = selectedId && detailQuery.isPending && !detailQuery.data;
 
     function updateFilter(name, value) {
         startTransition(() => {
@@ -198,12 +202,8 @@ export default function UserManagementPage({ currentUser }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {usersQuery.isPending ? (
-                                    <tr>
-                                        <td colSpan={4} className="px-5 py-12 text-center text-sm text-[var(--color-muted)]">
-                                            Cargando usuarios...
-                                        </td>
-                                    </tr>
+                                {showInitialUsersLoad ? (
+                                    <LoadingTableRows columns={4} />
                                 ) : users.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="px-5 py-12 text-center text-sm text-[var(--color-muted)]">
@@ -281,8 +281,8 @@ export default function UserManagementPage({ currentUser }) {
                 </div>
 
                 <aside className="panel-surface min-h-[320px] p-5">
-                    {selectedId && detailQuery.isPending ? (
-                        <p className="text-sm text-[var(--color-muted)]">Cargando usuario...</p>
+                    {showUserDetailLoad ? (
+                        <DetailPanelSkeleton blocks={4} />
                     ) : selectedUser ? (
                         <div className="space-y-6">
                             <div>

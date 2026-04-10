@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { ClientDashboardSkeleton } from '../components/LoadingSkeletons';
 import { fetchDashboard } from '../services/crmApi';
 import { formatCurrency, formatDateTime, titleize } from '../utils/formatters';
 
@@ -24,11 +25,7 @@ export default function ClientDashboardPage({ user }) {
     }
 
     if (dashboardQuery.isPending) {
-        return (
-            <div className="panel-surface p-8 text-sm text-[var(--color-muted)]">
-                Cargando tu resumen comercial...
-            </div>
-        );
+        return <ClientDashboardSkeleton />;
     }
 
     const data = dashboardQuery.data;

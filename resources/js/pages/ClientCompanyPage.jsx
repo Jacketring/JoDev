@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { CompanyPageSkeleton } from '../components/LoadingSkeletons';
 import { fetchRecord, updateRecord } from '../services/crmApi';
 import { formatRelationLabel, titleize } from '../utils/formatters';
 
@@ -79,11 +80,7 @@ export default function ClientCompanyPage({ user }) {
     }
 
     if (companyQuery.isPending) {
-        return (
-            <div className="panel-surface p-8 text-sm text-[var(--color-muted)]">
-                Cargando datos de tu empresa...
-            </div>
-        );
+        return <CompanyPageSkeleton />;
     }
 
     const company = companyQuery.data;
