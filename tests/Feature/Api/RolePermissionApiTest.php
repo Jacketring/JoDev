@@ -1,0 +1,202 @@
+<?php
+
+namespace Tests\Feature\Api;
+
+use App\Models\Actividad;
+use App\Models\Cliente;
+use App\Models\Contacto;
+use App\Models\Oportunidad;
+use App\Models\Tarea;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class RolePermissionApiTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_administrator_can_manage_users_and_assign_client_accounts(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'administrador',
+        ]);
+        $cliente = Cliente::factory()->create([
+            'empresa' => 'Acme Cliente',
+        ]);
+
+        $this->actingAs($admin);
+
+        $createResponse = $this->postJson('/api/usuarios', [
+            'name' => 'Cliente Portal',
+            'email' => 'portal@example.com',
+            'password' => 'Portal2026!',
+            'role' => 'cliente',
+            'cliente_id' => $cliente->id,
+        ]);
+
+        $userId = $createResponse->json('data.id');
+
+        $createResponse
+            ->assertCreated()
+            ->assertJsonPath('data.role', 'cliente')
+            ->assertJsonPath('data.cliente_id', $cliente->id);
+
+        $this->getJson('/api/usuarios?role=cliente')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.email', 'portal@example.com');
+
+        $this->putJson("/api/usuarios/{$userId}", [
+            'name' => 'Cliente Portal Editado',
+            'email' => 'portal@example.com',
+            'password' => null,
+            'role' => 'cliente',
+            'cliente_id' => $cliente->id,
+        ])->assertOk()
+            ->assertJsonPath('data.name', 'Cliente Portal Editado');
+    }
+
+    public function test_client_cannot_access_user_management_endpoints(): void
+    {
+        $cliente = Cliente::factory()->create();
+        $user = User::factory()->create([
+            'role' => 'cliente',
+            'cliente_id' => $cliente->id,
+        ]);
+
+        $this->actingAs($user);
+
+        $this->getJson('/api/usuarios')->assertForbidden();
+        $this->postJson('/api/usuarios', [
+            'name' => 'Otro',
+            'email' => 'otro@example.com',
+            'password' => 'Portal2026!',
+            'role' => 'cliente',
+            'cliente_id' => $cliente->id,
+        ])->assertForbidden();
+    }
+
+    public function test_client_only_sees_own_dashboard_and_can_only_update_safe_fields_on_own_company(): void
+    {
+        $clientePropio = Cliente::factory()->create([
+            'empresa' => 'Cliente JoDev',
+            'estado' => 'activo',
+            'telefono' => '911000111',
+        ]);
+        $clienteAjeno = Cliente::factory()->create([
+            'empresa' => 'Otro Cliente',
+            'estado' => 'activo',
+        ]);
+
+        $user = User::factory()->create([
+            'role' => 'cliente',
+            'cliente_id' => $clientePropio->id,
+        ]);
+
+        Oportunidad::factory()->for($clientePropio)->create([
+            'estado' => 'abierta',
+            'valor_estimado' => 12000,
+            'fase' => 'propuesta',
+        ]);
+        Tarea::factory()->for($clientePropio)->create([
+            'estado' => 'pendiente',
+        ]);
+        Actividad::factory()->for($clientePropio)->create([
+            'fecha_actividad' => now()->addDay(),
+        ]);
+
+        Oportunidad::factory()->for($clienteAjeno)->create([
+            'estado' => 'abierta',
+            'valor_estimado' => 99000,
+            'fase' => 'negociacion',
+        ]);
+        Tarea::factory()->for($clienteAjeno)->create([
+            'estado' => 'pendiente',
+        ]);
+        Actividad::factory()->for($clienteAjeno)->create([
+            'fecha_actividad' => now()->addDay(),
+        ]);
+
+        $this->actingAs($user);
+
+        $this->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('metricas.clientes_activos', 1)
+            ->assertJsonPath('metricas.oportunidades_abiertas', 1)
+            ->assertJsonPath('metricas.valor_pipeline', 12000)
+            ->assertJsonPath('metricas.tareas_pendientes', 1)
+            ->assertJsonPath('metricas.actividades_proximas', 1);
+
+        $this->putJson("/api/clientes/{$clientePropio->id}", [
+            'nombre' => $clientePropio->nombre,
+            'apellidos' => $clientePropio->apellidos,
+            'empresa' => 'Cliente JoDev Renovado',
+            'email' => $clientePropio->email,
+            'telefono' => '933444555',
+            'movil' => $clientePropio->movil,
+            'direccion' => $clientePropio->direccion,
+            'ciudad' => $clientePropio->ciudad,
+            'provincia' => $clientePropio->provincia,
+            'codigo_postal' => $clientePropio->codigo_postal,
+            'pais' => $clientePropio->pais,
+            'web' => $clientePropio->web,
+            'origen' => 'evento',
+            'estado' => 'inactivo',
+            'notas' => 'Actualizado por cliente',
+        ])->assertOk()
+            ->assertJsonPath('data.empresa', 'Cliente JoDev Renovado')
+            ->assertJsonPath('data.telefono', '933444555')
+            ->assertJsonPath('data.estado', 'activo')
+            ->assertJsonPath('data.origen', $clientePropio->origen);
+
+        $this->postJson('/api/clientes', [
+            'nombre' => 'No permitido',
+            'estado' => 'activo',
+        ])->assertForbidden();
+
+        $this->getJson("/api/clientes/{$clienteAjeno->id}")
+            ->assertForbidden();
+    }
+
+    public function test_client_can_manage_only_contacts_of_own_company(): void
+    {
+        $clientePropio = Cliente::factory()->create();
+        $clienteAjeno = Cliente::factory()->create();
+
+        $contactoPropio = Contacto::factory()->for($clientePropio)->create([
+            'nombre' => 'Marta',
+        ]);
+        $contactoAjeno = Contacto::factory()->for($clienteAjeno)->create([
+            'nombre' => 'Luis',
+        ]);
+
+        $user = User::factory()->create([
+            'role' => 'cliente',
+            'cliente_id' => $clientePropio->id,
+        ]);
+
+        $this->actingAs($user);
+
+        $this->getJson('/api/contactos')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.id', $contactoPropio->id);
+
+        $created = $this->postJson('/api/contactos', [
+            'cliente_id' => $clienteAjeno->id,
+            'nombre' => 'Nuevo',
+            'apellidos' => 'Contacto',
+            'cargo' => 'COO',
+            'email' => 'nuevo@cliente.test',
+            'es_principal' => true,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('contactos', [
+            'id' => $created->json('data.id'),
+            'cliente_id' => $clientePropio->id,
+        ]);
+
+        $this->deleteJson("/api/contactos/{$contactoAjeno->id}")
+            ->assertForbidden();
+    }
+}
