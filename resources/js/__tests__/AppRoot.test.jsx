@@ -183,4 +183,18 @@ describe('AppRoot', () => {
         expect(screen.getByText('Mi empresa')).toBeInTheDocument();
         expect(screen.getAllByText('Cliente JoDev').length).toBeGreaterThan(0);
     });
+
+    it('keeps social auth errors visible on the login route after unauthorized events', async () => {
+        renderRoot('/login?auth_error=google_not_configured');
+
+        expect(
+            await screen.findByText('El acceso con Google no esta configurado todavia.'),
+        ).toBeInTheDocument();
+
+        window.dispatchEvent(new CustomEvent('jodev:unauthorized'));
+
+        expect(
+            await screen.findByText('El acceso con Google no esta configurado todavia.'),
+        ).toBeInTheDocument();
+    });
 });

@@ -5,7 +5,7 @@
     "isEntry": true
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-Q08ey191.js",
+    "file": "assets/app-C9b1UWCv.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
@@ -20,7 +20,7 @@
     ]
   },
   "resources/js/components/EntityPage.jsx": {
-    "file": "assets/EntityPage-CYomsjxB.js",
+    "file": "assets/EntityPage-Cw6_128B.js",
     "name": "EntityPage",
     "src": "resources/js/components/EntityPage.jsx",
     "isDynamicEntry": true,
@@ -29,7 +29,7 @@
     ]
   },
   "resources/js/pages/ClientCompanyPage.jsx": {
-    "file": "assets/ClientCompanyPage-pCPMr-5-.js",
+    "file": "assets/ClientCompanyPage-DtKHPky-.js",
     "name": "ClientCompanyPage",
     "src": "resources/js/pages/ClientCompanyPage.jsx",
     "isDynamicEntry": true,
@@ -38,7 +38,7 @@
     ]
   },
   "resources/js/pages/ClientDashboardPage.jsx": {
-    "file": "assets/ClientDashboardPage-BWEcjw-Y.js",
+    "file": "assets/ClientDashboardPage-h5zFdyVl.js",
     "name": "ClientDashboardPage",
     "src": "resources/js/pages/ClientDashboardPage.jsx",
     "isDynamicEntry": true,
@@ -47,7 +47,7 @@
     ]
   },
   "resources/js/pages/DashboardPage.jsx": {
-    "file": "assets/DashboardPage-BS9sliJX.js",
+    "file": "assets/DashboardPage-DTV1LDGs.js",
     "name": "DashboardPage",
     "src": "resources/js/pages/DashboardPage.jsx",
     "isDynamicEntry": true,
@@ -56,7 +56,7 @@
     ]
   },
   "resources/js/pages/UserManagementPage.jsx": {
-    "file": "assets/UserManagementPage-CPl5IUCn.js",
+    "file": "assets/UserManagementPage-CNHBxAZ6.js",
     "name": "UserManagementPage",
     "src": "resources/js/pages/UserManagementPage.jsx",
     "isDynamicEntry": true,
@@ -65,7 +65,7 @@
     ]
   },
   "resources/js/pages/VisualSettingsPage.jsx": {
-    "file": "assets/VisualSettingsPage-D9cJYYLB.js",
+    "file": "assets/VisualSettingsPage-CghK7tJM.js",
     "name": "VisualSettingsPage",
     "src": "resources/js/pages/VisualSettingsPage.jsx",
     "isDynamicEntry": true,
