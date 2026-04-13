@@ -65,6 +65,23 @@ describe('AppRoot', () => {
             clientes_recientes: [],
             oportunidades_recientes: [],
             embudo: [],
+            distribuciones: {
+                clientes_estado: {
+                    total: 3,
+                    items: [
+                        { clave: 'activo', total: 2 },
+                        { clave: 'inactivo', total: 1 },
+                    ],
+                },
+                tareas_estado: {
+                    total: 5,
+                    items: [
+                        { clave: 'pendiente', total: 2 },
+                        { clave: 'en_progreso', total: 2 },
+                        { clave: 'completada', total: 1 },
+                    ],
+                },
+            },
         });
         crmApi.fetchOptions.mockResolvedValue({
             catalogos: {
@@ -116,6 +133,10 @@ describe('AppRoot', () => {
         renderRoot('/dashboard');
 
         expect(await screen.findByRole('heading', { name: 'Accede a JoDev' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Continuar con Google' })).toHaveAttribute(
+            'href',
+            '/auth/google/redirect',
+        );
 
         fireEvent.change(screen.getByLabelText('Email corporativo'), {
             target: { value: 'admin@jodev.es' },

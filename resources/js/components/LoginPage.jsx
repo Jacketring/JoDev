@@ -1,16 +1,20 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import BrandSignature from './BrandSignature';
 
 export default function LoginPage({ onSubmit, isPending, error }) {
+    const location = useLocation();
     const [values, setValues] = useState({
         email: '',
         password: '',
         remember: true,
     });
 
+    const socialMessage = mapSocialError(new URLSearchParams(location.search).get('auth_error'));
     const message =
         error?.response?.data?.errors?.email?.[0] ??
         error?.response?.data?.message ??
+        socialMessage ??
         null;
 
     function updateField(name, value) {
@@ -140,6 +144,21 @@ export default function LoginPage({ onSubmit, isPending, error }) {
                             >
                                 {isPending ? 'Accediendo...' : 'Entrar'}
                             </button>
+
+                            <div className="flex items-center gap-3 pt-1">
+                                <span className="h-px flex-1 bg-[var(--color-line)]" />
+                                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                                    o
+                                </span>
+                                <span className="h-px flex-1 bg-[var(--color-line)]" />
+                            </div>
+
+                            <a
+                                href="/auth/google/redirect"
+                                className="ghost-button w-full justify-center"
+                            >
+                                Continuar con Google
+                            </a>
                         </form>
 
                         <div className="mt-8 max-w-md rounded-[24px] border border-[var(--color-line)] bg-white/55 px-5 py-4">
@@ -156,6 +175,26 @@ export default function LoginPage({ onSubmit, isPending, error }) {
             </div>
         </div>
     );
+}
+
+function mapSocialError(code) {
+    if (code === 'google_not_configured') {
+        return 'El acceso con Google no esta configurado todavia.';
+    }
+
+    if (code === 'google_account_missing') {
+        return 'Tu cuenta de Google no esta autorizada para acceder a JoDev.';
+    }
+
+    if (code === 'google_email_missing') {
+        return 'Google no ha devuelto un email valido para esta cuenta.';
+    }
+
+    if (code === 'google_auth_failed') {
+        return 'No se pudo completar la autenticacion con Google.';
+    }
+
+    return null;
 }
 
 function BrandFact({ label, value, note }) {
