@@ -20,7 +20,7 @@ class ClienteController extends Controller
     {
         $query = $this->applyArchivedFilter(
             CrmAccess::applyClienteRecordScope(
-                Cliente::query()->withCount(['contactos', 'oportunidades']),
+                Cliente::query(),
                 $request->user()
             ),
             $request
@@ -43,7 +43,7 @@ class ClienteController extends Controller
     {
         CrmAccess::adminOnly($request->user());
 
-        $cliente = Cliente::create($request->validated())->loadCount(['contactos', 'oportunidades']);
+        $cliente = Cliente::create($request->validated());
 
         return (new ClienteResource($cliente))
             ->response()
@@ -53,15 +53,6 @@ class ClienteController extends Controller
     public function show(Cliente $cliente): ClienteResource
     {
         CrmAccess::ensureCanAccessCliente(request()->user(), $cliente->id);
-
-        $cliente
-            ->loadCount(['contactos', 'oportunidades'])
-            ->load([
-                'contactos' => fn ($query) => $query->orderByDesc('es_principal')->orderBy('nombre'),
-                'oportunidades' => fn ($query) => $query->latest(),
-                'actividades' => fn ($query) => $query->latest('fecha_actividad'),
-                'tareas' => fn ($query) => $query->orderBy('fecha_vencimiento'),
-            ]);
 
         return new ClienteResource($cliente);
     }
@@ -76,9 +67,7 @@ class ClienteController extends Controller
 
         $cliente->update($payload);
 
-        return new ClienteResource(
-            $cliente->fresh()->loadCount(['contactos', 'oportunidades'])
-        );
+        return new ClienteResource($cliente->fresh());
     }
 
     public function destroy(Cliente $cliente)

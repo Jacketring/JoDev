@@ -17,7 +17,10 @@ export default function DashboardPage() {
     const data = dashboardQuery.data;
     const recentClients = data.clientes_recientes ?? [];
     const activeClients = data.metricas.clientes_activos ?? 0;
-    const hasWorkspaceData = activeClients > 0 || recentClients.length > 0;
+    const totalClients = data.metricas.clientes_totales ?? 0;
+    const newClients = data.metricas.clientes_nuevos_30_dias ?? 0;
+    const clientDistribution = buildDistributionRows(data.distribuciones?.clientes_estado);
+    const hasWorkspaceData = (data.distribuciones?.clientes_estado?.total ?? 0) > 0 || recentClients.length > 0;
 
     return (
         <section className="flex min-h-[calc(100vh-12rem)] flex-col gap-4">
@@ -36,8 +39,8 @@ export default function DashboardPage() {
                             El CRM queda centrado en clientes y control interno.
                         </h2>
                         <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--color-muted)] md:text-base">
-                            Menos ruido visual y un flujo mas directo: base de clientes, gestion de accesos y
-                            configuracion del entorno.
+                            Sin modulos paralelos ni dependencias cruzadas: una base comercial clara, accesos
+                            internos y configuracion visual del entorno.
                         </p>
 
                         <div className="mt-8 grid gap-3 md:grid-cols-3">
@@ -47,14 +50,14 @@ export default function DashboardPage() {
                                 note="Base comercial disponible"
                             />
                             <HeroStat
-                                label="Registros recientes"
-                                value={recentClients.length}
-                                note="Ultimas altas visibles"
+                                label="Base total"
+                                value={totalClients}
+                                note="Clientes visibles en el CRM"
                             />
                             <HeroStat
-                                label="Modulos visibles"
-                                value="3"
-                                note="Clientes, usuarios y ajustes"
+                                label="Altas 30 dias"
+                                value={newClients}
+                                note="Incorporaciones recientes"
                             />
                         </div>
 
@@ -106,7 +109,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
             ) : (
-                <div className="grid flex-1 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+                <div className="grid flex-1 gap-4 xl:grid-cols-[1.08fr_0.92fr]">
                     <div className="panel-surface p-6 md:p-7">
                         <div className="flex items-center justify-between gap-3">
                             <div>
@@ -140,35 +143,13 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="grid gap-4">
-                        <div className="panel-surface p-6">
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                                Enfoque activo
-                            </p>
-                            <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
-                                Producto simplificado
-                            </h3>
-
-                            <div className="mt-6 space-y-3">
-                                <TimelineItem
-                                    label="Modulo principal"
-                                    title="Clientes"
-                                    subtitle="La operativa visible se concentra en la base comercial."
-                                    meta="Directorio activo"
-                                />
-                                <TimelineItem
-                                    label="Control interno"
-                                    title="Usuarios"
-                                    subtitle="Los accesos y roles siguen disponibles para administracion."
-                                    meta="Accesos"
-                                />
-                                <TimelineItem
-                                    label="Personalizacion"
-                                    title="Ajustes"
-                                    subtitle="El entorno visual permanece accesible sin tocar datos operativos."
-                                    meta="Preferencias"
-                                />
-                            </div>
-                        </div>
+                        <DistributionTableCard
+                            eyebrow="Clientes por estado"
+                            title="Lectura porcentual de la base"
+                            description="Reparto actual entre clientes activos e inactivos para leer el equilibrio de la cartera sin capas operativas adicionales."
+                            total={data.distribuciones?.clientes_estado?.total ?? 0}
+                            rows={clientDistribution}
+                        />
 
                         <div className="panel-surface p-6">
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
@@ -177,6 +158,10 @@ export default function DashboardPage() {
                             <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
                                 Siguiente paso
                             </h3>
+                            <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+                                Toda la operativa visible se queda en tres areas estables: clientes, usuarios y
+                                ajustes.
+                            </p>
 
                             <div className="mt-6 flex flex-wrap gap-3">
                                 <Link to="/clientes" className="primary-button">
@@ -241,17 +226,81 @@ function ClientTimelineItem({ title, subtitle, meta, status }) {
     );
 }
 
-function TimelineItem({ label, title, subtitle, meta }) {
+function DistributionTableCard({ eyebrow, title, description, total, rows }) {
     return (
-        <div className="rounded-[24px] border border-[var(--panel-line)] bg-[var(--panel-secondary-bg)] px-4 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">
-                {label}
-            </p>
-            <p className="mt-2 font-semibold text-[var(--color-ink)]">{title}</p>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">{subtitle}</p>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
-                {meta}
-            </p>
+        <div className="panel-surface p-6">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
+                        {eyebrow}
+                    </p>
+                    <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
+                        {title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">{description}</p>
+                </div>
+                <span className="soft-badge">{total} registros</span>
+            </div>
+
+            {rows.length === 0 ? (
+                <p className="mt-6 text-sm leading-6 text-[var(--color-muted)]">
+                    Aun no hay datos suficientes para construir esta tabla de porcentajes.
+                </p>
+            ) : (
+                <div className="mt-6 overflow-hidden rounded-[24px] border border-[var(--panel-line)] bg-[var(--panel-secondary-bg)]">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-left">
+                            <thead className="border-b border-[var(--panel-line)] bg-[color-mix(in srgb, var(--panel-secondary-bg) 82%, white)]">
+                                <tr>
+                                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                                        Estado
+                                    </th>
+                                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                                        Registros
+                                    </th>
+                                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                                        Peso
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows.map((row) => (
+                                    <tr
+                                        key={row.key}
+                                        className="border-b border-[var(--panel-line)]/80 align-top last:border-b-0"
+                                    >
+                                        <td className="px-4 py-4">
+                                            <p className="font-semibold text-[var(--color-ink)]">{row.label}</p>
+                                        </td>
+                                        <td className="px-4 py-4 text-sm font-semibold text-[var(--color-ink)]">
+                                            {row.total}
+                                        </td>
+                                        <td className="px-4 py-4 text-sm font-semibold text-[var(--color-ink)]">
+                                            {row.percentage}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </div>
     );
+}
+
+function buildDistributionRows(distribution) {
+    const total = distribution?.total ?? 0;
+
+    return (distribution?.items ?? []).map((item) => {
+        const count = Number(item.total ?? 0);
+        const share = total > 0 ? Math.round((count / total) * 100) : 0;
+
+        return {
+            key: item.clave,
+            label: titleize(item.clave),
+            total: count,
+            percentage: `${share}%`,
+        };
+    });
 }

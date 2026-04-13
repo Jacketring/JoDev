@@ -27,15 +27,9 @@ class ClienteResource extends JsonResource
             'origen' => $this->origen,
             'estado' => $this->estado,
             'notas' => $this->notas,
-            'contactos_count' => $this->whenCounted('contactos'),
-            'oportunidades_count' => $this->whenCounted('oportunidades'),
             'created_at' => optional($this->created_at)?->toIso8601String(),
             'updated_at' => optional($this->updated_at)?->toIso8601String(),
             'deleted_at' => optional($this->deleted_at)?->toIso8601String(),
-            'contactos' => ContactoResource::collection($this->whenLoaded('contactos')),
-            'oportunidades' => OportunidadResource::collection($this->whenLoaded('oportunidades')),
-            'actividades' => ActividadResource::collection($this->whenLoaded('actividades')),
-            'tareas' => TareaResource::collection($this->whenLoaded('tareas')),
         ];
     }
 }

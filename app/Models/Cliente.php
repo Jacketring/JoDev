@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasMany as HasManyRelation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cliente extends Model
@@ -38,27 +37,7 @@ class Cliente extends Model
         'notas',
     ];
 
-    public function contactos(): HasMany
-    {
-        return $this->hasMany(Contacto::class);
-    }
-
-    public function oportunidades(): HasMany
-    {
-        return $this->hasMany(Oportunidad::class);
-    }
-
-    public function actividades(): HasMany
-    {
-        return $this->hasMany(Actividad::class);
-    }
-
-    public function tareas(): HasMany
-    {
-        return $this->hasMany(Tarea::class);
-    }
-
-    public function users(): HasManyRelation
+    public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }

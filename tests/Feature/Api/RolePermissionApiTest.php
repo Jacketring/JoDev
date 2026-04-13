@@ -2,11 +2,7 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\Actividad;
 use App\Models\Cliente;
-use App\Models\Contacto;
-use App\Models\Oportunidad;
-use App\Models\Tarea;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -85,7 +81,7 @@ class RolePermissionApiTest extends TestCase
         ]);
         $clienteAjeno = Cliente::factory()->create([
             'empresa' => 'Otro Cliente',
-            'estado' => 'activo',
+            'estado' => 'inactivo',
         ]);
 
         $user = User::factory()->create([
@@ -93,39 +89,14 @@ class RolePermissionApiTest extends TestCase
             'cliente_id' => $clientePropio->id,
         ]);
 
-        Oportunidad::factory()->for($clientePropio)->create([
-            'estado' => 'abierta',
-            'valor_estimado' => 12000,
-            'fase' => 'propuesta',
-        ]);
-        Tarea::factory()->for($clientePropio)->create([
-            'estado' => 'pendiente',
-        ]);
-        Actividad::factory()->for($clientePropio)->create([
-            'fecha_actividad' => now()->addDay(),
-        ]);
-
-        Oportunidad::factory()->for($clienteAjeno)->create([
-            'estado' => 'abierta',
-            'valor_estimado' => 99000,
-            'fase' => 'negociacion',
-        ]);
-        Tarea::factory()->for($clienteAjeno)->create([
-            'estado' => 'pendiente',
-        ]);
-        Actividad::factory()->for($clienteAjeno)->create([
-            'fecha_actividad' => now()->addDay(),
-        ]);
-
         $this->actingAs($user);
 
         $this->getJson('/api/dashboard')
             ->assertOk()
             ->assertJsonPath('metricas.clientes_activos', 1)
-            ->assertJsonPath('metricas.oportunidades_abiertas', 1)
-            ->assertJsonPath('metricas.valor_pipeline', 12000)
-            ->assertJsonPath('metricas.tareas_pendientes', 1)
-            ->assertJsonPath('metricas.actividades_proximas', 1);
+            ->assertJsonPath('metricas.clientes_totales', 1)
+            ->assertJsonPath('metricas.clientes_nuevos_30_dias', 1)
+            ->assertJsonPath('distribuciones.clientes_estado.total', 1);
 
         $this->putJson("/api/clientes/{$clientePropio->id}", [
             'nombre' => $clientePropio->nombre,
@@ -155,48 +126,6 @@ class RolePermissionApiTest extends TestCase
         ])->assertForbidden();
 
         $this->getJson("/api/clientes/{$clienteAjeno->id}")
-            ->assertForbidden();
-    }
-
-    public function test_client_can_manage_only_contacts_of_own_company(): void
-    {
-        $clientePropio = Cliente::factory()->create();
-        $clienteAjeno = Cliente::factory()->create();
-
-        $contactoPropio = Contacto::factory()->for($clientePropio)->create([
-            'nombre' => 'Marta',
-        ]);
-        $contactoAjeno = Contacto::factory()->for($clienteAjeno)->create([
-            'nombre' => 'Luis',
-        ]);
-
-        $user = User::factory()->create([
-            'role' => 'cliente',
-            'cliente_id' => $clientePropio->id,
-        ]);
-
-        $this->actingAs($user);
-
-        $this->getJson('/api/contactos')
-            ->assertOk()
-            ->assertJsonPath('meta.total', 1)
-            ->assertJsonPath('data.0.id', $contactoPropio->id);
-
-        $created = $this->postJson('/api/contactos', [
-            'cliente_id' => $clienteAjeno->id,
-            'nombre' => 'Nuevo',
-            'apellidos' => 'Contacto',
-            'cargo' => 'COO',
-            'email' => 'nuevo@cliente.test',
-            'es_principal' => true,
-        ])->assertCreated();
-
-        $this->assertDatabaseHas('contactos', [
-            'id' => $created->json('data.id'),
-            'cliente_id' => $clientePropio->id,
-        ]);
-
-        $this->deleteJson("/api/contactos/{$contactoAjeno->id}")
             ->assertForbidden();
     }
 }
