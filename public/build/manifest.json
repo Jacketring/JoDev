@@ -1,11 +1,11 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-BcvzzxAy.css",
+    "file": "assets/app-CgeLoPaT.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-C9b1UWCv.js",
+    "file": "assets/app-BItXZysc.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
@@ -20,7 +20,7 @@
     ]
   },
   "resources/js/components/EntityPage.jsx": {
-    "file": "assets/EntityPage-Cw6_128B.js",
+    "file": "assets/EntityPage-BBqtJ7LE.js",
     "name": "EntityPage",
     "src": "resources/js/components/EntityPage.jsx",
     "isDynamicEntry": true,
@@ -29,7 +29,7 @@
     ]
   },
   "resources/js/pages/ClientCompanyPage.jsx": {
-    "file": "assets/ClientCompanyPage-DtKHPky-.js",
+    "file": "assets/ClientCompanyPage-BCVgEsye.js",
     "name": "ClientCompanyPage",
     "src": "resources/js/pages/ClientCompanyPage.jsx",
     "isDynamicEntry": true,
@@ -38,7 +38,7 @@
     ]
   },
   "resources/js/pages/ClientDashboardPage.jsx": {
-    "file": "assets/ClientDashboardPage-h5zFdyVl.js",
+    "file": "assets/ClientDashboardPage-DvsYroeM.js",
     "name": "ClientDashboardPage",
     "src": "resources/js/pages/ClientDashboardPage.jsx",
     "isDynamicEntry": true,
@@ -47,7 +47,7 @@
     ]
   },
   "resources/js/pages/DashboardPage.jsx": {
-    "file": "assets/DashboardPage-DTV1LDGs.js",
+    "file": "assets/DashboardPage-DF9wdAtq.js",
     "name": "DashboardPage",
     "src": "resources/js/pages/DashboardPage.jsx",
     "isDynamicEntry": true,
@@ -56,7 +56,7 @@
     ]
   },
   "resources/js/pages/UserManagementPage.jsx": {
-    "file": "assets/UserManagementPage-CNHBxAZ6.js",
+    "file": "assets/UserManagementPage-BnQSLInX.js",
     "name": "UserManagementPage",
     "src": "resources/js/pages/UserManagementPage.jsx",
     "isDynamicEntry": true,
@@ -65,7 +65,7 @@
     ]
   },
   "resources/js/pages/VisualSettingsPage.jsx": {
-    "file": "assets/VisualSettingsPage-CghK7tJM.js",
+    "file": "assets/VisualSettingsPage-DXT10iZa.js",
     "name": "VisualSettingsPage",
     "src": "resources/js/pages/VisualSettingsPage.jsx",
     "isDynamicEntry": true,

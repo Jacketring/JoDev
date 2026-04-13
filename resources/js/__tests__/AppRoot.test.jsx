@@ -65,23 +65,6 @@ describe('AppRoot', () => {
             clientes_recientes: [],
             oportunidades_recientes: [],
             embudo: [],
-            distribuciones: {
-                clientes_estado: {
-                    total: 3,
-                    items: [
-                        { clave: 'activo', total: 2 },
-                        { clave: 'inactivo', total: 1 },
-                    ],
-                },
-                tareas_estado: {
-                    total: 5,
-                    items: [
-                        { clave: 'pendiente', total: 2 },
-                        { clave: 'en_progreso', total: 2 },
-                        { clave: 'completada', total: 1 },
-                    ],
-                },
-            },
         });
         crmApi.fetchOptions.mockResolvedValue({
             catalogos: {
@@ -133,10 +116,6 @@ describe('AppRoot', () => {
         renderRoot('/dashboard');
 
         expect(await screen.findByRole('heading', { name: 'Accede a JoDev' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Continuar con Google' })).toHaveAttribute(
-            'href',
-            '/auth/google/redirect',
-        );
 
         fireEvent.change(screen.getByLabelText('Email corporativo'), {
             target: { value: 'admin@jodev.es' },
@@ -182,19 +161,5 @@ describe('AppRoot', () => {
         expect(await screen.findByRole('heading', { name: 'Portal cliente' })).toBeInTheDocument();
         expect(screen.getByText('Mi empresa')).toBeInTheDocument();
         expect(screen.getAllByText('Cliente JoDev').length).toBeGreaterThan(0);
-    });
-
-    it('keeps social auth errors visible on the login route after unauthorized events', async () => {
-        renderRoot('/login?auth_error=google_not_configured');
-
-        expect(
-            await screen.findByText('El acceso con Google no esta configurado todavia.'),
-        ).toBeInTheDocument();
-
-        window.dispatchEvent(new CustomEvent('jodev:unauthorized'));
-
-        expect(
-            await screen.findByText('El acceso con Google no esta configurado todavia.'),
-        ).toBeInTheDocument();
     });
 });

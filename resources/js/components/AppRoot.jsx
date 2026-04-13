@@ -49,11 +49,6 @@ export default function AppRoot() {
         queryClient.removeQueries({
             predicate: (query) => query.queryKey[0] !== 'auth',
         });
-
-        if (location.pathname === '/login') {
-            return;
-        }
-
         navigate('/login', { replace: true });
     });
 
