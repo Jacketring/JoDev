@@ -85,9 +85,6 @@ export default function LoginPage({ onSubmit, isPending, error }) {
                             <p className="mt-4 text-sm leading-7 text-[var(--color-muted)] md:text-base">
                                 Introduce tus credenciales para entrar en la plataforma y continuar tu trabajo.
                             </p>
-                            <p className="mt-4 inline-flex rounded-full border border-[var(--color-line)] bg-white/65 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-strong)]">
-                                Webhook GitHub activo
-                            </p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="mt-10 max-w-md space-y-5">
