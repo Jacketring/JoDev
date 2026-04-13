@@ -1,0 +1,76 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-BxPNNw7A.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.jsx": {
+    "file": "assets/app-CG8HKjoN.js",
+    "name": "app",
+    "src": "resources/js/app.jsx",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/components/EntityPage.jsx",
+      "resources/js/pages/DashboardPage.jsx",
+      "resources/js/pages/UserManagementPage.jsx",
+      "resources/js/pages/VisualSettingsPage.jsx",
+      "resources/js/pages/ClientCompanyPage.jsx",
+      "resources/js/pages/ClientDashboardPage.jsx",
+      "resources/js/pages/VisualSettingsPage.jsx"
+    ]
+  },
+  "resources/js/components/EntityPage.jsx": {
+    "file": "assets/EntityPage-D19zlmNj.js",
+    "name": "EntityPage",
+    "src": "resources/js/components/EntityPage.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/pages/ClientCompanyPage.jsx": {
+    "file": "assets/ClientCompanyPage-HM-ukQqh.js",
+    "name": "ClientCompanyPage",
+    "src": "resources/js/pages/ClientCompanyPage.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/pages/ClientDashboardPage.jsx": {
+    "file": "assets/ClientDashboardPage-Buf09fc_.js",
+    "name": "ClientDashboardPage",
+    "src": "resources/js/pages/ClientDashboardPage.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/pages/DashboardPage.jsx": {
+    "file": "assets/DashboardPage-BFNSCOFN.js",
+    "name": "DashboardPage",
+    "src": "resources/js/pages/DashboardPage.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/pages/UserManagementPage.jsx": {
+    "file": "assets/UserManagementPage-CEK8ECo-.js",
+    "name": "UserManagementPage",
+    "src": "resources/js/pages/UserManagementPage.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/pages/VisualSettingsPage.jsx": {
+    "file": "assets/VisualSettingsPage-CPDy4JQI.js",
+    "name": "VisualSettingsPage",
+    "src": "resources/js/pages/VisualSettingsPage.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  }
+}
