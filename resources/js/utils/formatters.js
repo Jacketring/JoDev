@@ -13,6 +13,8 @@ const currencyFormatter = new Intl.NumberFormat('es-ES', {
     maximumFractionDigits: 0,
 });
 
+const percentageFormatters = new Map();
+
 export function formatDateTime(value) {
     if (!value) {
         return 'Sin fecha';
@@ -31,6 +33,22 @@ export function formatDate(value) {
 
 export function formatCurrency(value) {
     return currencyFormatter.format(Number(value || 0));
+}
+
+export function formatPercentage(value, maximumFractionDigits = 0) {
+    const digits = Number.isFinite(maximumFractionDigits) ? maximumFractionDigits : 0;
+
+    if (!percentageFormatters.has(digits)) {
+        percentageFormatters.set(
+            digits,
+            new Intl.NumberFormat('es-ES', {
+                style: 'percent',
+                maximumFractionDigits: digits,
+            }),
+        );
+    }
+
+    return percentageFormatters.get(digits).format(Number(value || 0));
 }
 
 export function titleize(value) {

@@ -10,6 +10,7 @@ vi.mock('../services/crmApi', () => ({
     logout: vi.fn(),
     fetchDashboard: vi.fn(),
     fetchCollection: vi.fn(),
+    fetchGlobalSearch: vi.fn(),
     fetchOptions: vi.fn(),
     fetchVisualSettings: vi.fn(),
     fetchRecord: vi.fn(),
@@ -91,6 +92,10 @@ describe('AppRoot', () => {
             accent_tone: 'sereno',
             background_scene: 'mist',
             motion_level: 'balanced',
+        });
+        crmApi.fetchGlobalSearch.mockResolvedValue({
+            total: 0,
+            results: [],
         });
         crmApi.updateVisualSettings.mockResolvedValue({
             theme_mode: 'original',

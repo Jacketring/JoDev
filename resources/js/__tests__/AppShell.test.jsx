@@ -7,6 +7,7 @@ import AppShell from '../components/AppShell';
 vi.mock('../services/crmApi', () => ({
     fetchDashboard: vi.fn(),
     fetchCollection: vi.fn(),
+    fetchGlobalSearch: vi.fn(),
     fetchOptions: vi.fn(),
     fetchVisualSettings: vi.fn(),
     fetchRecord: vi.fn(),
@@ -61,7 +62,27 @@ describe('AppShell', () => {
             tareas_vencidas: [],
             clientes_recientes: [],
             oportunidades_recientes: [],
-            embudo: [],
+            embudo: [
+                { fase: 'nuevo', total: 1, valor: 2000 },
+                { fase: 'propuesta', total: 3, valor: 10000 },
+            ],
+            distribuciones: {
+                clientes_estado: {
+                    total: 3,
+                    items: [
+                        { clave: 'activo', total: 2 },
+                        { clave: 'inactivo', total: 1 },
+                    ],
+                },
+                tareas_estado: {
+                    total: 5,
+                    items: [
+                        { clave: 'pendiente', total: 2 },
+                        { clave: 'en_progreso', total: 2 },
+                        { clave: 'completada', total: 1 },
+                    ],
+                },
+            },
         });
 
         crmApi.fetchOptions.mockResolvedValue({
@@ -90,6 +111,25 @@ describe('AppShell', () => {
             background_scene: 'mist',
             motion_level: 'balanced',
         });
+        crmApi.fetchGlobalSearch.mockResolvedValue({
+            total: 1,
+            results: [
+                {
+                    entity: 'contactos',
+                    label: 'Contactos',
+                    items: [
+                        {
+                            id: 7,
+                            entity: 'contactos',
+                            title: 'Ana Lopez',
+                            subtitle: 'Acme Solar / Directora',
+                            meta: 'Principal',
+                            url: '/contactos?search=Ana&record=7',
+                        },
+                    ],
+                },
+            ],
+        });
         crmApi.updateVisualSettings.mockResolvedValue({
             theme_mode: 'original',
             navigation_density: 'expanded',
@@ -116,6 +156,8 @@ describe('AppShell', () => {
 
         expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
         expect(await screen.findByText('Clientes activos')).toBeInTheDocument();
+        expect(await screen.findByText('Clientes por estado')).toBeInTheDocument();
+        expect(await screen.findByText('Pipeline por fase')).toBeInTheDocument();
         expect(screen.getByText('Jose Development CRM')).toBeInTheDocument();
 
         fireEvent.click(
@@ -126,6 +168,24 @@ describe('AppShell', () => {
 
         await waitFor(() => {
             expect(screen.getByText(/Todav/i)).toBeInTheDocument();
+        });
+    });
+
+    it('runs a global search and navigates to the matching entity', async () => {
+        renderShell();
+
+        fireEvent.change(screen.getByLabelText('Buscador global'), {
+            target: { value: 'Ana' },
+        });
+
+        await waitFor(() => {
+            expect(crmApi.fetchGlobalSearch).toHaveBeenCalledWith({ q: 'Ana', limit: 4 });
+        });
+
+        fireEvent.click(await screen.findByRole('button', { name: /Ana Lopez/i }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Contactos' })).toBeInTheDocument();
         });
     });
 

@@ -46,6 +46,19 @@ class CrmAccess
         );
     }
 
+    public static function ensureCanAccessScopedCliente(User $user, int|string|null $clienteId): void
+    {
+        if ($user->isAdmin()) {
+            return;
+        }
+
+        abort_unless(
+            $clienteId !== null && (int) $clienteId === self::linkedClienteId($user),
+            403,
+            'No tienes acceso a este registro.',
+        );
+    }
+
     public static function applyClienteScope(Builder $query, User $user, string $column = 'cliente_id'): Builder
     {
         if ($user->isAdmin()) {

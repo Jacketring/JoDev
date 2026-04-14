@@ -1,12 +1,10 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useDeferredValue, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { moduleConfigs, moduleOrder } from '../config/crmConfig';
+import { buildVisualTheme, normalizeVisualSettings } from '../config/visualSettingsConfig';
 import {
-    buildVisualTheme,
-    normalizeVisualSettings,
-} from '../config/visualSettingsConfig';
-import {
+    fetchGlobalSearch,
     fetchVisualSettings,
     updateVisualSettings,
 } from '../services/crmApi';
@@ -26,7 +24,7 @@ const sectionMeta = {
     dashboard: {
         title: 'Dashboard',
         eyebrow: 'JoDev CRM',
-        description: 'Vista general del area activa: clientes, accesos y configuracion del entorno.',
+        description: 'Vista transversal del pipeline, seguimiento operativo y acceso rapido a cada entidad del CRM.',
     },
     ajustes: {
         title: 'Ajustes visuales',
@@ -42,7 +40,10 @@ const sectionMeta = {
 
 export default function AppShell({ user, onLogout, logoutPending }) {
     const location = useLocation();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const [globalSearch, setGlobalSearch] = useState('');
+    const deferredGlobalSearch = useDeferredValue(globalSearch.trim());
 
     const visualSettingsQuery = useQuery({
         queryKey: ['visual-settings'],
@@ -68,9 +69,26 @@ export default function AppShell({ user, onLogout, logoutPending }) {
         },
     });
 
+    const globalSearchQuery = useQuery({
+        enabled: deferredGlobalSearch.length >= 2,
+        queryKey: ['global-search', deferredGlobalSearch],
+        queryFn: () => fetchGlobalSearch({ q: deferredGlobalSearch, limit: 4 }),
+        staleTime: 30_000,
+    });
+
+    useEffect(() => {
+        setGlobalSearch('');
+    }, [location.pathname, location.search]);
+
     const visualSettings = normalizeVisualSettings(visualSettingsQuery.data);
     const sectionKey = location.pathname.split('/').filter(Boolean)[0] ?? 'dashboard';
     const section = sectionMeta[sectionKey] ?? moduleConfigs[sectionKey] ?? sectionMeta.dashboard;
+    const searchReady = globalSearch.trim().length >= 2;
+
+    function handleGlobalResultSelect(url) {
+        navigate(url);
+        setGlobalSearch('');
+    }
 
     return (
         <div className="workspace-theme" style={buildVisualTheme(visualSettings)}>
@@ -108,7 +126,9 @@ export default function AppShell({ user, onLogout, logoutPending }) {
                             <p className="mt-3 text-sm font-semibold text-[var(--color-ink)]">{user.name}</p>
                             <p className="mt-1 text-sm text-[var(--color-muted)]">{user.email}</p>
                             <p className="mt-3">
-                                <span className="soft-badge">{user.role === 'administrador' ? 'Administrador' : 'Cliente'}</span>
+                                <span className="soft-badge">
+                                    {user.role === 'administrador' ? 'Administrador' : 'Cliente'}
+                                </span>
                             </p>
 
                             <button
@@ -124,7 +144,7 @@ export default function AppShell({ user, onLogout, logoutPending }) {
 
                     <main className="workspace-main">
                         <div className="panel-surface workspace-header">
-                            <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                            <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start 2xl:justify-between">
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]">
                                         {section.eyebrow}
@@ -132,11 +152,50 @@ export default function AppShell({ user, onLogout, logoutPending }) {
                                     <h1 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-4xl">
                                         {section.title}
                                     </h1>
+                                    <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--color-muted)]">
+                                        {section.description}
+                                    </p>
                                 </div>
 
-                                <p className="max-w-2xl text-sm leading-6 text-[var(--color-muted)]">
-                                    {section.description}
-                                </p>
+                                <div className="relative w-full max-w-2xl">
+                                    <label
+                                        htmlFor="global-search"
+                                        className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]"
+                                    >
+                                        Buscador global
+                                    </label>
+
+                                    <div className="mt-3 flex items-center gap-3 rounded-[26px] border border-[var(--color-line)] bg-[var(--panel-secondary-bg)] px-4 py-3">
+                                        <input
+                                            id="global-search"
+                                            value={globalSearch}
+                                            onChange={(event) => setGlobalSearch(event.target.value)}
+                                            placeholder="Busca en clientes, contactos, oportunidades, actividades y tareas"
+                                            className="w-full bg-transparent text-sm text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
+                                        />
+                                        {globalSearch ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setGlobalSearch('')}
+                                                className="table-action"
+                                            >
+                                                Limpiar
+                                            </button>
+                                        ) : null}
+                                    </div>
+
+                                    {globalSearch.trim() ? (
+                                        <div className="absolute inset-x-0 top-[calc(100%+0.8rem)] z-40 overflow-hidden rounded-[28px] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[var(--panel-shadow-soft)]">
+                                            <GlobalSearchPanel
+                                                isReady={searchReady}
+                                                isLoading={globalSearchQuery.isFetching}
+                                                results={globalSearchQuery.data?.results ?? []}
+                                                total={globalSearchQuery.data?.total ?? 0}
+                                                onSelect={handleGlobalResultSelect}
+                                            />
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
 
@@ -215,5 +274,66 @@ function NavigationLink({ to, label, hint }) {
                 {hint}
             </span>
         </NavLink>
+    );
+}
+
+function GlobalSearchPanel({ isReady, isLoading, results, total, onSelect }) {
+    if (!isReady) {
+        return (
+            <div className="px-5 py-4 text-sm text-[var(--color-muted)]">
+                Escribe al menos 2 caracteres para buscar en todo el CRM.
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="px-5 py-4 text-sm text-[var(--color-muted)]">
+                Buscando coincidencias en todas las entidades...
+            </div>
+        );
+    }
+
+    if (total === 0) {
+        return (
+            <div className="px-5 py-4 text-sm text-[var(--color-muted)]">
+                No hay coincidencias con esa busqueda.
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-h-[28rem] overflow-y-auto px-3 py-3">
+            <div className="px-2 pb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                {total} resultados visibles
+            </div>
+
+            {results.map((section) => (
+                <div key={section.entity} className="mb-2 last:mb-0">
+                    <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
+                        {section.label}
+                    </p>
+
+                    <div className="space-y-2">
+                        {section.items.map((item) => (
+                            <button
+                                key={`${item.entity}-${item.id}`}
+                                type="button"
+                                onClick={() => onSelect(item.url)}
+                                className="flex w-full items-start justify-between gap-3 rounded-[22px] border border-[var(--color-line)] bg-[var(--panel-secondary-bg)] px-4 py-3 text-left transition hover:bg-[var(--color-surface)]"
+                            >
+                                <div>
+                                    <p className="font-semibold text-[var(--color-ink)]">{item.title}</p>
+                                    <p className="mt-1 text-sm text-[var(--color-muted)]">
+                                        {item.subtitle || 'Sin detalle secundario'}
+                                    </p>
+                                </div>
+                                <span className="soft-badge">{item.meta}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
     );
 }

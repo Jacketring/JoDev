@@ -5,51 +5,39 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Cliente extends Model
+class Contacto extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public const ESTADOS = [
-        'activo',
-        'inactivo',
-    ];
-
-    protected $table = 'clientes';
+    protected $table = 'contactos';
 
     protected $fillable = [
+        'cliente_id',
         'nombre',
         'apellidos',
-        'empresa',
+        'cargo',
         'email',
         'telefono',
         'movil',
-        'direccion',
-        'ciudad',
-        'provincia',
-        'codigo_postal',
-        'pais',
-        'web',
-        'origen',
-        'estado',
+        'es_principal',
         'notas',
     ];
 
-    public function users(): HasMany
+    protected function casts(): array
     {
-        return $this->hasMany(User::class);
+        return [
+            'cliente_id' => 'integer',
+            'es_principal' => 'boolean',
+        ];
     }
 
-    public function contactos(): HasMany
+    public function cliente(): BelongsTo
     {
-        return $this->hasMany(Contacto::class);
-    }
-
-    public function oportunidades(): HasMany
-    {
-        return $this->hasMany(Oportunidad::class);
+        return $this->belongsTo(Cliente::class)->withTrashed();
     }
 
     public function actividades(): HasMany
@@ -76,10 +64,16 @@ class Cliente extends Model
             $builder
                 ->where('nombre', 'like', $like)
                 ->orWhere('apellidos', 'like', $like)
-                ->orWhere('empresa', 'like', $like)
+                ->orWhere('cargo', 'like', $like)
                 ->orWhere('email', 'like', $like)
                 ->orWhere('telefono', 'like', $like)
-                ->orWhere('movil', 'like', $like);
+                ->orWhere('movil', 'like', $like)
+                ->orWhereHas('cliente', function (Builder $clienteQuery) use ($like) {
+                    $clienteQuery
+                        ->where('empresa', 'like', $like)
+                        ->orWhere('nombre', 'like', $like)
+                        ->orWhere('apellidos', 'like', $like);
+                });
         });
     }
 

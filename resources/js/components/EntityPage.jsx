@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { startTransition, useDeferredValue, useState } from 'react';
+import { startTransition, useDeferredValue, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     archiveRecord,
     createRecord,
@@ -20,6 +21,7 @@ import {
 import { DetailPanelSkeleton, LoadingTableRows } from './LoadingSkeletons';
 
 export default function EntityPage({ config }) {
+    const location = useLocation();
     const queryClient = useQueryClient();
     const [filters, setFilters] = useState(config.defaultFilters);
     const [formOpen, setFormOpen] = useState(false);
@@ -87,6 +89,23 @@ export default function EntityPage({ config }) {
     const selectedRecord = detailQuery.data ?? items.find((item) => item.id === selectedId) ?? null;
     const showInitialListLoad = listQuery.isPending && !listQuery.data;
     const showDetailLoad = selectedId && detailQuery.isPending && !detailQuery.data;
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const routeSearch = params.get('search');
+        const recordValue = params.get('record');
+        const nextSelectedId = recordValue ? Number(recordValue) : null;
+
+        startTransition(() => {
+            setFilters({
+                ...config.defaultFilters,
+                search: routeSearch ?? config.defaultFilters.search,
+                page: 1,
+            });
+        });
+
+        setSelectedId(Number.isInteger(nextSelectedId) ? nextSelectedId : null);
+    }, [config.defaultFilters, location.search]);
 
     function updateFilter(name, value) {
         startTransition(() => {
@@ -607,6 +626,10 @@ function formatDetailValue(field, record) {
 
     if (field.type === 'select') {
         return titleize(record[field.name]);
+    }
+
+    if (field.name === 'probabilidad') {
+        return `${record[field.name] ?? 0}%`;
     }
 
     if (field.name === 'valor_estimado') {

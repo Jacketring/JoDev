@@ -5,46 +5,30 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ClienteResource extends JsonResource
+class ContactoResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
+            'cliente_id' => $this->cliente_id,
             'nombre' => $this->nombre,
             'apellidos' => $this->apellidos,
             'nombre_completo' => $this->nombre_completo,
-            'empresa' => $this->empresa,
+            'cargo' => $this->cargo,
             'email' => $this->email,
             'telefono' => $this->telefono,
             'movil' => $this->movil,
-            'direccion' => $this->direccion,
-            'ciudad' => $this->ciudad,
-            'provincia' => $this->provincia,
-            'codigo_postal' => $this->codigo_postal,
-            'pais' => $this->pais,
-            'web' => $this->web,
-            'origen' => $this->origen,
-            'estado' => $this->estado,
+            'es_principal' => $this->es_principal,
             'notas' => $this->notas,
-            'contactos_count' => $this->whenCounted('contactos'),
-            'oportunidades_count' => $this->whenCounted('oportunidades'),
+            'cliente' => $this->whenLoaded('cliente', fn () => $this->cliente ? [
+                'id' => $this->cliente->id,
+                'nombre_completo' => $this->cliente->nombre_completo,
+                'empresa' => $this->cliente->empresa,
+                'estado' => $this->cliente->estado,
+            ] : null),
             'actividades_count' => $this->whenCounted('actividades'),
             'tareas_count' => $this->whenCounted('tareas'),
-            'contactos' => $this->whenLoaded('contactos', fn () => $this->contactos->map(fn ($contacto) => [
-                'id' => $contacto->id,
-                'nombre_completo' => $contacto->nombre_completo,
-                'cargo' => $contacto->cargo,
-                'email' => $contacto->email,
-                'es_principal' => $contacto->es_principal,
-            ])->values()),
-            'oportunidades' => $this->whenLoaded('oportunidades', fn () => $this->oportunidades->map(fn ($oportunidad) => [
-                'id' => $oportunidad->id,
-                'titulo' => $oportunidad->titulo,
-                'fase' => $oportunidad->fase,
-                'estado' => $oportunidad->estado,
-                'valor_estimado' => $oportunidad->valor_estimado,
-            ])->values()),
             'actividades' => $this->whenLoaded('actividades', fn () => $this->actividades->map(fn ($actividad) => [
                 'id' => $actividad->id,
                 'tipo' => $actividad->tipo,

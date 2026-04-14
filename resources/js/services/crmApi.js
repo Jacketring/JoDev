@@ -65,6 +65,14 @@ export async function fetchOptions() {
     return response.data;
 }
 
+export async function fetchGlobalSearch(params) {
+    const response = await http.get('/api/busqueda-global', {
+        params: pruneParams(params),
+    });
+
+    return response.data;
+}
+
 export async function fetchVisualSettings() {
     const response = await http.get('/api/ajustes-visuales');
     return response.data.data;
