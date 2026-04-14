@@ -161,21 +161,17 @@ class CrmEntityApiTest extends ApiTestCase
             ->assertJsonPath('data.0.id', $visible->id);
 
         $createResponse = $this->postJson('/api/actividades', [
-            'cliente_id' => $cliente->id,
-            'contacto_id' => $contacto->id,
-            'oportunidad_id' => $oportunidad->id,
-            'tipo' => 'reunion',
             'asunto' => 'Reunion de cierre',
-            'descripcion' => 'Preparacion final',
-            'fecha_actividad' => now()->addDay()->toIso8601String(),
-            'completada' => false,
+            'contacto_id' => $contacto->id,
         ]);
 
         $actividadId = $createResponse->json('data.id');
 
         $createResponse
             ->assertCreated()
-            ->assertJsonPath('data.asunto', 'Reunion de cierre');
+            ->assertJsonPath('data.asunto', 'Reunion de cierre')
+            ->assertJsonPath('data.cliente_id', $cliente->id)
+            ->assertJsonPath('data.tipo', 'nota');
 
         $this->putJson("/api/actividades/{$actividadId}", [
             'cliente_id' => $cliente->id,

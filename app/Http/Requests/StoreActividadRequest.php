@@ -14,6 +14,37 @@ class StoreActividadRequest extends FormRequest
 {
     use ValidatesCrmRelations;
 
+    protected function prepareForValidation(): void
+    {
+        $clienteId = $this->input('cliente_id');
+        $contactoId = $this->input('contacto_id');
+        $oportunidadId = $this->input('oportunidad_id');
+
+        if (! $clienteId && $contactoId) {
+            $clienteId = Contacto::query()->whereKey($contactoId)->value('cliente_id');
+        }
+
+        if (! $clienteId && $oportunidadId) {
+            $clienteId = Oportunidad::query()->whereKey($oportunidadId)->value('cliente_id');
+        }
+
+        $payload = array_filter([
+            'cliente_id' => $clienteId,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        if ($this->isMethod('post')) {
+            $payload += [
+                'tipo' => $this->input('tipo') ?: 'nota',
+                'fecha_actividad' => $this->input('fecha_actividad') ?: now()->toIso8601String(),
+                'completada' => $this->input('completada', false),
+            ];
+        }
+
+        if ($payload !== []) {
+            $this->merge($payload);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -24,7 +55,7 @@ class StoreActividadRequest extends FormRequest
         $clienteId = $this->integer('cliente_id') ?: null;
 
         return [
-            'cliente_id' => ['required', 'integer', $this->activeExists('clientes')],
+            'cliente_id' => ['nullable', 'integer', $this->activeExists('clientes')],
             'contacto_id' => [
                 'nullable',
                 'integer',
@@ -41,10 +72,10 @@ class StoreActividadRequest extends FormRequest
                     $this->ensureBelongsToCliente($clienteId, $value, Oportunidad::class, 'oportunidad', $fail);
                 },
             ],
-            'tipo' => ['required', Rule::in(Actividad::TIPOS)],
+            'tipo' => ['nullable', Rule::in(Actividad::TIPOS)],
             'asunto' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string'],
-            'fecha_actividad' => ['required', 'date'],
+            'fecha_actividad' => ['nullable', 'date'],
             'completada' => ['boolean'],
         ];
     }
