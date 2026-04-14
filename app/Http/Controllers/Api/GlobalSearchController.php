@@ -124,7 +124,7 @@ class GlobalSearchController extends Controller
     protected function searchActividades(User $user, string $term, int $limit): array
     {
         $items = CrmAccess::applyClienteScope(
-            Actividad::query()->with(['cliente', 'contacto', 'oportunidad']),
+            Actividad::query()->with(['assignedUser', 'cliente', 'contacto', 'oportunidad']),
             $user
         )
             ->search($term)
@@ -135,10 +135,7 @@ class GlobalSearchController extends Controller
                 'id' => $actividad->id,
                 'entity' => 'actividades',
                 'title' => $actividad->asunto,
-                'subtitle' => $this->joinParts([
-                    $actividad->cliente?->empresa,
-                    $actividad->contacto?->nombre_completo ?: $actividad->oportunidad?->titulo,
-                ]),
+                'subtitle' => $this->joinParts([$actividad->assignedUser?->name, ucfirst($actividad->tipo)]),
                 'meta' => ucfirst($actividad->tipo),
                 'url' => $this->buildUrl('actividades', $term, $actividad->id),
             ])

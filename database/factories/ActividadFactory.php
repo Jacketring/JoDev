@@ -17,6 +17,7 @@ class ActividadFactory extends Factory
             'cliente_id' => Cliente::factory(),
             'contacto_id' => null,
             'oportunidad_id' => null,
+            'assigned_user_id' => null,
             'tipo' => fake()->randomElement(Actividad::TIPOS),
             'asunto' => fake()->sentence(4),
             'descripcion' => fake()->paragraph(),

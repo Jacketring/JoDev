@@ -68,6 +68,11 @@ class User extends Authenticatable
         return $this->hasMany(Tarea::class, 'assigned_user_id');
     }
 
+    public function assignedActivities(): HasMany
+    {
+        return $this->hasMany(Actividad::class, 'assigned_user_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'administrador';

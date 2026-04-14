@@ -429,12 +429,12 @@ export const moduleConfigs = {
         key: 'actividades',
         title: 'Actividades',
         eyebrow: 'Seguimiento',
-        description: 'Llamadas, reuniones, emails y notas vinculadas a cada cuenta.',
+        description: 'Seguimiento interno asignado a responsables, sin depender de cliente u oportunidad.',
         endpoint: '/api/actividades',
         emptyState: 'Todavia no hay actividades creadas.',
         defaultFilters: {
             search: '',
-            cliente_id: '',
+            assigned_user_id: '',
             tipo: '',
             completada: '',
             archived: '',
@@ -446,13 +446,13 @@ export const moduleConfigs = {
                 name: 'search',
                 label: 'Buscar',
                 type: 'search',
-                placeholder: 'Asunto, tipo, contacto o cliente',
+                placeholder: 'Asunto, tipo o responsable',
             },
             {
-                name: 'cliente_id',
-                label: 'Cliente',
+                name: 'assigned_user_id',
+                label: 'Responsable',
                 type: 'select',
-                getOptions: (options) => getClienteOptions(options),
+                getOptions: (options) => getAssignableUserOptions(options),
             },
             {
                 name: 'tipo',
@@ -474,10 +474,10 @@ export const moduleConfigs = {
                 ),
             },
             {
-                header: 'Cliente',
+                header: 'Responsable',
                 render: (item) => (
                     <p className="text-sm text-[var(--color-muted)]">
-                        {formatRelationLabel(item.cliente?.empresa, item.contacto?.nombre_completo)}
+                        {item.assigned_user?.name ?? 'Sin responsable'}
                     </p>
                 ),
             },
@@ -494,25 +494,12 @@ export const moduleConfigs = {
         ],
         fields: [
             {
-                name: 'cliente_id',
-                label: 'Cliente',
+                name: 'assigned_user_id',
+                label: 'Responsable',
                 type: 'select',
+                required: true,
                 numeric: true,
-                getOptions: (options) => getClienteOptions(options),
-            },
-            {
-                name: 'contacto_id',
-                label: 'Contacto',
-                type: 'select',
-                numeric: true,
-                getOptions: (options, values) => getContactoOptions(options, values),
-            },
-            {
-                name: 'oportunidad_id',
-                label: 'Oportunidad',
-                type: 'select',
-                numeric: true,
-                getOptions: (options, values) => getOportunidadOptions(options, values),
+                getOptions: (options) => getAssignableUserOptions(options),
             },
             {
                 name: 'tipo',
@@ -528,7 +515,7 @@ export const moduleConfigs = {
         ],
         getRecordTitle: (item) => item.asunto,
         getRecordSubtitle: (item) =>
-            formatRelationLabel(item.cliente?.empresa, item.contacto?.nombre_completo ?? item.oportunidad?.titulo),
+            formatRelationLabel(item.assigned_user?.name, item.tipo ? titleize(item.tipo) : null),
     },
     tareas: {
         key: 'tareas',

@@ -26,6 +26,7 @@ class Actividad extends Model
         'cliente_id',
         'contacto_id',
         'oportunidad_id',
+        'assigned_user_id',
         'tipo',
         'asunto',
         'descripcion',
@@ -39,6 +40,7 @@ class Actividad extends Model
             'cliente_id' => 'integer',
             'contacto_id' => 'integer',
             'oportunidad_id' => 'integer',
+            'assigned_user_id' => 'integer',
             'fecha_actividad' => 'datetime',
             'completada' => 'boolean',
         ];
@@ -59,6 +61,11 @@ class Actividad extends Model
         return $this->belongsTo(Oportunidad::class)->withTrashed();
     }
 
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         $term = trim((string) $term);
@@ -74,6 +81,11 @@ class Actividad extends Model
                 ->where('tipo', 'like', $like)
                 ->orWhere('asunto', 'like', $like)
                 ->orWhere('descripcion', 'like', $like)
+                ->orWhereHas('assignedUser', function (Builder $userQuery) use ($like) {
+                    $userQuery
+                        ->where('name', 'like', $like)
+                        ->orWhere('email', 'like', $like);
+                })
                 ->orWhereHas('cliente', function (Builder $clienteQuery) use ($like) {
                     $clienteQuery
                         ->where('empresa', 'like', $like)
