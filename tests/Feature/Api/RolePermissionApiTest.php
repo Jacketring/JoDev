@@ -98,6 +98,10 @@ class RolePermissionApiTest extends TestCase
             ->assertJsonPath('metricas.clientes_nuevos_30_dias', 1)
             ->assertJsonPath('distribuciones.clientes_estado.total', 1);
 
+        $this->getJson('/api/opciones')
+            ->assertOk()
+            ->assertJsonPath('usuarios_asignables', []);
+
         $this->putJson("/api/clientes/{$clientePropio->id}", [
             'nombre' => $clientePropio->nombre,
             'apellidos' => $clientePropio->apellidos,

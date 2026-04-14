@@ -616,6 +616,12 @@ function formatDetailValue(field, record) {
         return record.oportunidad ? record.oportunidad.titulo : 'Sin asignar';
     }
 
+    if (field.name === 'assigned_user_id') {
+        return record.assigned_user
+            ? formatRelationLabel(record.assigned_user.name, titleize(record.assigned_user.role))
+            : 'Sin asignar';
+    }
+
     if (field.type === 'date') {
         return formatDate(record[field.name]);
     }

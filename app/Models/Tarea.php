@@ -32,6 +32,7 @@ class Tarea extends Model
         'cliente_id',
         'contacto_id',
         'oportunidad_id',
+        'assigned_user_id',
         'titulo',
         'descripcion',
         'prioridad',
@@ -45,6 +46,7 @@ class Tarea extends Model
             'cliente_id' => 'integer',
             'contacto_id' => 'integer',
             'oportunidad_id' => 'integer',
+            'assigned_user_id' => 'integer',
             'fecha_vencimiento' => 'datetime',
         ];
     }
@@ -64,6 +66,11 @@ class Tarea extends Model
         return $this->belongsTo(Oportunidad::class)->withTrashed();
     }
 
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         $term = trim((string) $term);
@@ -80,6 +87,11 @@ class Tarea extends Model
                 ->orWhere('descripcion', 'like', $like)
                 ->orWhere('prioridad', 'like', $like)
                 ->orWhere('estado', 'like', $like)
+                ->orWhereHas('assignedUser', function (Builder $userQuery) use ($like) {
+                    $userQuery
+                        ->where('name', 'like', $like)
+                        ->orWhere('email', 'like', $like);
+                })
                 ->orWhereHas('cliente', function (Builder $clienteQuery) use ($like) {
                     $clienteQuery
                         ->where('empresa', 'like', $like)

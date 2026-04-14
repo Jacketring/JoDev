@@ -17,6 +17,7 @@ class TareaFactory extends Factory
             'cliente_id' => Cliente::factory(),
             'contacto_id' => null,
             'oportunidad_id' => null,
+            'assigned_user_id' => null,
             'titulo' => fake()->sentence(4),
             'descripcion' => fake()->paragraph(),
             'prioridad' => fake()->randomElement(Tarea::PRIORIDADES),

@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\Contacto;
 use App\Models\Oportunidad;
 use App\Models\Tarea;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\ApiTestCase;
 
@@ -199,11 +200,17 @@ class CrmEntityApiTest extends ApiTestCase
         $cliente = Cliente::factory()->create(['empresa' => 'Acme Solar']);
         $contacto = Contacto::factory()->create(['cliente_id' => $cliente->id]);
         $oportunidad = Oportunidad::factory()->create(['cliente_id' => $cliente->id]);
+        $responsable = User::factory()->create([
+            'name' => 'Jose Responsable',
+            'email' => 'responsable@example.com',
+            'role' => 'administrador',
+        ]);
 
         $visible = Tarea::factory()->create([
             'cliente_id' => $cliente->id,
             'contacto_id' => $contacto->id,
             'oportunidad_id' => $oportunidad->id,
+            'assigned_user_id' => $responsable->id,
             'titulo' => 'Preparar propuesta',
             'prioridad' => 'alta',
             'estado' => 'pendiente',
@@ -216,15 +223,17 @@ class CrmEntityApiTest extends ApiTestCase
             'estado' => 'completada',
         ]);
 
-        $this->getJson('/api/tareas?search=propuesta&prioridad=alta&estado=pendiente')
+        $this->getJson("/api/tareas?search=Jose&prioridad=alta&estado=pendiente&assigned_user_id={$responsable->id}")
             ->assertOk()
             ->assertJsonPath('meta.total', 1)
-            ->assertJsonPath('data.0.id', $visible->id);
+            ->assertJsonPath('data.0.id', $visible->id)
+            ->assertJsonPath('data.0.assigned_user.id', $responsable->id);
 
         $createResponse = $this->postJson('/api/tareas', [
             'cliente_id' => $cliente->id,
             'contacto_id' => $contacto->id,
             'oportunidad_id' => $oportunidad->id,
+            'assigned_user_id' => $responsable->id,
             'titulo' => 'Enviar contrato',
             'descripcion' => 'Revision legal',
             'prioridad' => 'urgente',
@@ -236,19 +245,22 @@ class CrmEntityApiTest extends ApiTestCase
 
         $createResponse
             ->assertCreated()
-            ->assertJsonPath('data.titulo', 'Enviar contrato');
+            ->assertJsonPath('data.titulo', 'Enviar contrato')
+            ->assertJsonPath('data.assigned_user.id', $responsable->id);
 
         $this->putJson("/api/tareas/{$tareaId}", [
             'cliente_id' => $cliente->id,
             'contacto_id' => $contacto->id,
             'oportunidad_id' => $oportunidad->id,
+            'assigned_user_id' => null,
             'titulo' => 'Enviar contrato',
             'descripcion' => 'Revision legal y comercial',
             'prioridad' => 'alta',
             'estado' => 'en_progreso',
             'fecha_vencimiento' => now()->addDays(5)->toIso8601String(),
         ])->assertOk()
-            ->assertJsonPath('data.estado', 'en_progreso');
+            ->assertJsonPath('data.estado', 'en_progreso')
+            ->assertJsonPath('data.assigned_user', null);
 
         $this->deleteJson("/api/tareas/{$tareaId}")
             ->assertNoContent();

@@ -8,6 +8,7 @@ use App\Models\Cliente;
 use App\Models\Contacto;
 use App\Models\Oportunidad;
 use App\Models\Tarea;
+use App\Models\User;
 use App\Support\CrmAccess;
 use Illuminate\Http\Request;
 
@@ -59,6 +60,24 @@ class OpcionesController extends Controller
                     'estado' => $oportunidad->estado,
                     'valor_estimado' => $oportunidad->valor_estimado,
                 ]),
+            'usuarios_asignables' => $user->isAdmin()
+                ? User::query()
+                    ->with('cliente')
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (User $assignableUser) => [
+                        'id' => $assignableUser->id,
+                        'name' => $assignableUser->name,
+                        'email' => $assignableUser->email,
+                        'role' => $assignableUser->role,
+                        'cliente_id' => $assignableUser->cliente_id,
+                        'cliente' => $assignableUser->cliente ? [
+                            'id' => $assignableUser->cliente->id,
+                            'empresa' => $assignableUser->cliente->empresa,
+                            'nombre_completo' => $assignableUser->cliente->nombre_completo,
+                        ] : null,
+                    ])
+                : [],
         ]);
     }
 }

@@ -54,6 +54,28 @@ function getOportunidadOptions(options, values = {}) {
         }));
 }
 
+function getAssignableUserOptions(options, values = {}) {
+    const clienteId = Number(values.cliente_id || 0);
+
+    return (options?.usuarios_asignables ?? [])
+        .filter((user) => {
+            if (!clienteId) {
+                return true;
+            }
+
+            return user.role === 'administrador' || user.cliente_id === clienteId;
+        })
+        .map((user) => ({
+            value: user.id,
+            label: formatRelationLabel(
+                user.name,
+                user.role === 'administrador'
+                    ? 'Administrador'
+                    : (user.cliente?.empresa ?? user.email),
+            ),
+        }));
+}
+
 export const moduleOrder = ['clientes', 'contactos', 'oportunidades', 'actividades', 'tareas'];
 
 export const moduleConfigs = {
@@ -520,6 +542,7 @@ export const moduleConfigs = {
         defaultFilters: {
             search: '',
             cliente_id: '',
+            assigned_user_id: '',
             prioridad: '',
             estado: '',
             archived: '',
@@ -538,6 +561,12 @@ export const moduleConfigs = {
                 label: 'Cliente',
                 type: 'select',
                 getOptions: (options) => getClienteOptions(options),
+            },
+            {
+                name: 'assigned_user_id',
+                label: 'Responsable',
+                type: 'select',
+                getOptions: (options) => getAssignableUserOptions(options),
             },
             {
                 name: 'prioridad',
@@ -560,7 +589,7 @@ export const moduleConfigs = {
                     <div>
                         <p className="font-semibold text-[var(--color-ink)]">{item.titulo}</p>
                         <p className="text-xs text-[var(--color-muted)]">
-                            {formatRelationLabel(item.cliente?.empresa, item.contacto?.nombre_completo)}
+                            {formatRelationLabel(item.cliente?.empresa, item.assigned_user?.name ?? item.contacto?.nombre_completo)}
                         </p>
                     </div>
                 ),
@@ -572,6 +601,14 @@ export const moduleConfigs = {
             {
                 header: 'Estado',
                 render: (item) => <span className="soft-badge">{titleize(item.estado)}</span>,
+            },
+            {
+                header: 'Responsable',
+                render: (item) => (
+                    <p className="text-sm text-[var(--color-muted)]">
+                        {item.assigned_user?.name ?? 'Sin asignar'}
+                    </p>
+                ),
             },
             {
                 header: 'Vencimiento',
@@ -603,6 +640,13 @@ export const moduleConfigs = {
                 numeric: true,
                 getOptions: (options, values) => getOportunidadOptions(options, values),
             },
+            {
+                name: 'assigned_user_id',
+                label: 'Responsable',
+                type: 'select',
+                numeric: true,
+                getOptions: (options, values) => getAssignableUserOptions(options, values),
+            },
             { name: 'titulo', label: 'Titulo', type: 'text', required: true },
             { name: 'descripcion', label: 'Descripcion', type: 'textarea', gridClass: 'md:col-span-2' },
             {
@@ -625,6 +669,9 @@ export const moduleConfigs = {
         ],
         getRecordTitle: (item) => item.titulo,
         getRecordSubtitle: (item) =>
-            formatRelationLabel(item.cliente?.empresa, `${titleize(item.prioridad)} / ${titleize(item.estado)}`),
+            formatRelationLabel(
+                item.assigned_user?.name ?? item.cliente?.empresa,
+                `${titleize(item.prioridad)} / ${titleize(item.estado)}`,
+            ),
     },
 };

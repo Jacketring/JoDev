@@ -41,6 +41,17 @@ class StoreTareaRequest extends FormRequest
                     $this->ensureBelongsToCliente($clienteId, $value, Oportunidad::class, 'oportunidad', $fail);
                 },
             ],
+            'assigned_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where(function ($query) use ($clienteId) {
+                    $query->where(function ($nested) use ($clienteId) {
+                        $nested
+                            ->where('role', 'administrador')
+                            ->orWhere('cliente_id', $clienteId);
+                    });
+                }),
+            ],
             'titulo' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string'],
             'prioridad' => ['required', Rule::in(Tarea::PRIORIDADES)],

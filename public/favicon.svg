@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <linearGradient id="jodevGradient" x1="14" y1="12" x2="78" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#dff1ff"/>
+      <stop offset="1" stop-color="#79afcf"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="84" height="84" rx="24" fill="url(#jodevGradient)"/>
+  <path d="M26 18v38c0 11 7 18 18 18 9 0 16-4 21-11" stroke="#18354f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M58 28l12 10-12 10" stroke="#18354f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M46 58l9-32" stroke="#5d95b8" stroke-width="8" stroke-linecap="round" fill="none"/>
+</svg>

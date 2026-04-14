@@ -20,7 +20,7 @@ class TareaController extends Controller
     {
         $query = $this->applyArchivedFilter(
             CrmAccess::applyClienteScope(
-                Tarea::query()->with(['cliente', 'contacto', 'oportunidad']),
+                Tarea::query()->with(['cliente', 'contacto', 'oportunidad', 'assignedUser']),
                 $request->user()
             ),
             $request
@@ -40,6 +40,10 @@ class TareaController extends Controller
                 $request->filled('estado'),
                 fn ($builder) => $builder->where('estado', $request->string('estado'))
             )
+            ->when(
+                $request->filled('assigned_user_id'),
+                fn ($builder) => $builder->where('assigned_user_id', $request->integer('assigned_user_id'))
+            )
             ->latest('fecha_vencimiento');
 
         return TareaResource::collection(
@@ -52,7 +56,7 @@ class TareaController extends Controller
         CrmAccess::adminOnly($request->user());
 
         $tarea = Tarea::create($request->validated());
-        $tarea->load(['cliente', 'contacto', 'oportunidad']);
+        $tarea->load(['cliente', 'contacto', 'oportunidad', 'assignedUser']);
 
         return (new TareaResource($tarea))
             ->response()
@@ -64,7 +68,7 @@ class TareaController extends Controller
         CrmAccess::ensureCanAccessScopedCliente(request()->user(), $tarea->cliente_id);
 
         return new TareaResource(
-            $tarea->loadMissing(['cliente', 'contacto', 'oportunidad'])
+            $tarea->loadMissing(['cliente', 'contacto', 'oportunidad', 'assignedUser'])
         );
     }
 
@@ -75,7 +79,7 @@ class TareaController extends Controller
 
         $tarea->update($request->validated());
 
-        return new TareaResource($tarea->fresh()->load(['cliente', 'contacto', 'oportunidad']));
+        return new TareaResource($tarea->fresh()->load(['cliente', 'contacto', 'oportunidad', 'assignedUser']));
     }
 
     public function destroy(Tarea $tarea)
