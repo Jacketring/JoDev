@@ -8,6 +8,8 @@ use App\Http\Requests\StoreActividadRequest;
 use App\Http\Requests\UpdateActividadRequest;
 use App\Http\Resources\ActividadResource;
 use App\Models\Actividad;
+use App\Models\Contacto;
+use App\Models\Oportunidad;
 use App\Support\CrmAccess;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -51,7 +53,7 @@ class ActividadController extends Controller
     {
         CrmAccess::adminOnly($request->user());
 
-        $actividad = Actividad::create($request->validated());
+        $actividad = Actividad::create($this->normalizePayload($request->validated()));
         $actividad->load(['cliente', 'contacto', 'oportunidad']);
 
         return (new ActividadResource($actividad))
@@ -86,5 +88,22 @@ class ActividadController extends Controller
         $actividad->delete();
 
         return response()->noContent();
+    }
+
+    protected function normalizePayload(array $data): array
+    {
+        if (empty($data['cliente_id']) && ! empty($data['contacto_id'])) {
+            $data['cliente_id'] = Contacto::query()->whereKey($data['contacto_id'])->value('cliente_id');
+        }
+
+        if (empty($data['cliente_id']) && ! empty($data['oportunidad_id'])) {
+            $data['cliente_id'] = Oportunidad::query()->whereKey($data['oportunidad_id'])->value('cliente_id');
+        }
+
+        $data['tipo'] = $data['tipo'] ?? 'nota';
+        $data['fecha_actividad'] = $data['fecha_actividad'] ?? now();
+        $data['completada'] = (bool) ($data['completada'] ?? false);
+
+        return $data;
     }
 }

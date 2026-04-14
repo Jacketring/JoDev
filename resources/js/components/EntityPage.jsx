@@ -456,30 +456,39 @@ function createFormState(config, record = null) {
     return Object.fromEntries(
         config.fields.map((field) => {
             const rawValue = record?.[field.name];
+            const defaultValue = resolveFieldDefaultValue(field);
 
             if (field.type === 'checkbox') {
-                return [field.name, Boolean(rawValue ?? field.defaultValue ?? false)];
+                return [field.name, Boolean(rawValue ?? defaultValue ?? false)];
             }
 
             if (field.type === 'date') {
-                return [field.name, record ? toDateInputValue(rawValue) : field.defaultValue ?? ''];
+                return [field.name, record ? toDateInputValue(rawValue) : defaultValue ?? ''];
             }
 
             if (field.type === 'datetime-local') {
-                return [field.name, record ? toDateTimeInputValue(rawValue) : field.defaultValue ?? ''];
+                return [field.name, record ? toDateTimeInputValue(rawValue) : defaultValue ?? ''];
             }
 
             if (field.type === 'select' && field.numeric) {
-                return [field.name, rawValue != null ? String(rawValue) : field.defaultValue ?? ''];
+                return [field.name, rawValue != null ? String(rawValue) : defaultValue ?? ''];
             }
 
             if (field.type === 'number') {
-                return [field.name, rawValue ?? field.defaultValue ?? ''];
+                return [field.name, rawValue ?? defaultValue ?? ''];
             }
 
-            return [field.name, rawValue ?? field.defaultValue ?? ''];
+            return [field.name, rawValue ?? defaultValue ?? ''];
         }),
     );
+}
+
+function resolveFieldDefaultValue(field) {
+    if (field.defaultValue === '__now__' && field.type === 'datetime-local') {
+        return toDateTimeInputValue(new Date().toISOString());
+    }
+
+    return field.defaultValue;
 }
 
 function serializePayload(config, values) {

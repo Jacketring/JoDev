@@ -191,6 +191,40 @@ class CrmEntityApiTest extends ApiTestCase
         $this->assertSoftDeleted('actividades', ['id' => $actividadId]);
     }
 
+    public function test_it_creates_an_activity_with_only_subject_and_defaults(): void
+    {
+        $response = $this->postJson('/api/actividades', [
+            'cliente_id' => null,
+            'contacto_id' => null,
+            'oportunidad_id' => null,
+            'tipo' => null,
+            'asunto' => 'Nota rapida sin relaciones',
+            'descripcion' => null,
+            'fecha_actividad' => null,
+            'completada' => false,
+        ]);
+
+        $actividadId = $response->json('data.id');
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.asunto', 'Nota rapida sin relaciones')
+            ->assertJsonPath('data.tipo', 'nota')
+            ->assertJsonPath('data.cliente_id', null)
+            ->assertJsonPath('data.contacto_id', null)
+            ->assertJsonPath('data.oportunidad_id', null)
+            ->assertJsonPath('data.completada', false);
+
+        $this->assertDatabaseHas('actividades', [
+            'id' => $actividadId,
+            'asunto' => 'Nota rapida sin relaciones',
+            'tipo' => 'nota',
+            'cliente_id' => null,
+            'contacto_id' => null,
+            'oportunidad_id' => null,
+        ]);
+    }
+
     public function test_it_lists_and_manages_tareas(): void
     {
         $cliente = Cliente::factory()->create(['empresa' => 'Acme Solar']);
