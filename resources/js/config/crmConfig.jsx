@@ -521,12 +521,11 @@ export const moduleConfigs = {
         key: 'tareas',
         title: 'Tareas',
         eyebrow: 'Ejecucion',
-        description: 'Pendientes operativos con prioridad, estado y vencimiento.',
+        description: 'Pendientes internos asignados a responsables, sin depender de cliente ni oportunidad.',
         endpoint: '/api/tareas',
         emptyState: 'Todavia no hay tareas creadas.',
         defaultFilters: {
             search: '',
-            cliente_id: '',
             assigned_user_id: '',
             prioridad: '',
             estado: '',
@@ -539,13 +538,7 @@ export const moduleConfigs = {
                 name: 'search',
                 label: 'Buscar',
                 type: 'search',
-                placeholder: 'Titulo, prioridad, estado o cliente',
-            },
-            {
-                name: 'cliente_id',
-                label: 'Cliente',
-                type: 'select',
-                getOptions: (options) => getClienteOptions(options),
+                placeholder: 'Titulo, prioridad, estado o responsable',
             },
             {
                 name: 'assigned_user_id',
@@ -574,7 +567,7 @@ export const moduleConfigs = {
                     <div>
                         <p className="font-semibold text-[var(--color-ink)]">{item.titulo}</p>
                         <p className="text-xs text-[var(--color-muted)]">
-                            {formatRelationLabel(item.cliente?.empresa, item.assigned_user?.name ?? item.contacto?.nombre_completo)}
+                            {formatRelationLabel(item.assigned_user?.name, titleize(item.prioridad))}
                         </p>
                     </div>
                 ),
@@ -604,33 +597,12 @@ export const moduleConfigs = {
         ],
         fields: [
             {
-                name: 'cliente_id',
-                label: 'Cliente',
-                type: 'select',
-                required: true,
-                numeric: true,
-                getOptions: (options) => getClienteOptions(options),
-            },
-            {
-                name: 'contacto_id',
-                label: 'Contacto',
-                type: 'select',
-                numeric: true,
-                getOptions: (options, values) => getContactoOptions(options, values),
-            },
-            {
-                name: 'oportunidad_id',
-                label: 'Oportunidad',
-                type: 'select',
-                numeric: true,
-                getOptions: (options, values) => getOportunidadOptions(options, values),
-            },
-            {
                 name: 'assigned_user_id',
                 label: 'Responsable',
                 type: 'select',
+                required: true,
                 numeric: true,
-                getOptions: (options, values) => getAssignableUserOptions(options, values),
+                getOptions: (options) => getAssignableUserOptions(options),
             },
             { name: 'titulo', label: 'Titulo', type: 'text', required: true },
             { name: 'descripcion', label: 'Descripcion', type: 'textarea', gridClass: 'md:col-span-2' },
@@ -655,7 +627,7 @@ export const moduleConfigs = {
         getRecordTitle: (item) => item.titulo,
         getRecordSubtitle: (item) =>
             formatRelationLabel(
-                item.assigned_user?.name ?? item.cliente?.empresa,
+                item.assigned_user?.name,
                 `${titleize(item.prioridad)} / ${titleize(item.estado)}`,
             ),
     },

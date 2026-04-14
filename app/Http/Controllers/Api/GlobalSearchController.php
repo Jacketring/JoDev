@@ -152,7 +152,7 @@ class GlobalSearchController extends Controller
     protected function searchTareas(User $user, string $term, int $limit): array
     {
         $items = CrmAccess::applyClienteScope(
-            Tarea::query()->with(['cliente', 'contacto', 'oportunidad', 'assignedUser']),
+            Tarea::query()->with(['assignedUser']),
             $user
         )
             ->search($term)
@@ -163,10 +163,7 @@ class GlobalSearchController extends Controller
                 'id' => $tarea->id,
                 'entity' => 'tareas',
                 'title' => $tarea->titulo,
-                'subtitle' => $this->joinParts([
-                    $tarea->cliente?->empresa,
-                    $tarea->assignedUser?->name ?: ($tarea->contacto?->nombre_completo ?: $tarea->oportunidad?->titulo),
-                ]),
+                'subtitle' => $this->joinParts([$tarea->assignedUser?->name, ucfirst(str_replace('_', ' ', $tarea->prioridad))]),
                 'meta' => ucfirst(str_replace('_', ' ', $tarea->estado)),
                 'url' => $this->buildUrl('tareas', $term, $tarea->id),
             ])

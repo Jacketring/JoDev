@@ -236,9 +236,6 @@ class CrmEntityApiTest extends ApiTestCase
 
     public function test_it_lists_and_manages_tareas(): void
     {
-        $cliente = Cliente::factory()->create(['empresa' => 'Acme Solar']);
-        $contacto = Contacto::factory()->create(['cliente_id' => $cliente->id]);
-        $oportunidad = Oportunidad::factory()->create(['cliente_id' => $cliente->id]);
         $responsable = User::factory()->create([
             'name' => 'Jose Responsable',
             'email' => 'responsable@example.com',
@@ -246,9 +243,9 @@ class CrmEntityApiTest extends ApiTestCase
         ]);
 
         $visible = Tarea::factory()->create([
-            'cliente_id' => $cliente->id,
-            'contacto_id' => $contacto->id,
-            'oportunidad_id' => $oportunidad->id,
+            'cliente_id' => null,
+            'contacto_id' => null,
+            'oportunidad_id' => null,
             'assigned_user_id' => $responsable->id,
             'titulo' => 'Preparar propuesta',
             'prioridad' => 'alta',
@@ -256,7 +253,7 @@ class CrmEntityApiTest extends ApiTestCase
         ]);
 
         Tarea::factory()->create([
-            'cliente_id' => $cliente->id,
+            'cliente_id' => null,
             'titulo' => 'Cerrar expediente',
             'prioridad' => 'baja',
             'estado' => 'completada',
@@ -269,15 +266,8 @@ class CrmEntityApiTest extends ApiTestCase
             ->assertJsonPath('data.0.assigned_user.id', $responsable->id);
 
         $createResponse = $this->postJson('/api/tareas', [
-            'cliente_id' => $cliente->id,
-            'contacto_id' => $contacto->id,
-            'oportunidad_id' => $oportunidad->id,
             'assigned_user_id' => $responsable->id,
             'titulo' => 'Enviar contrato',
-            'descripcion' => 'Revision legal',
-            'prioridad' => 'urgente',
-            'estado' => 'pendiente',
-            'fecha_vencimiento' => now()->addDays(3)->toIso8601String(),
         ]);
 
         $tareaId = $createResponse->json('data.id');
@@ -285,13 +275,15 @@ class CrmEntityApiTest extends ApiTestCase
         $createResponse
             ->assertCreated()
             ->assertJsonPath('data.titulo', 'Enviar contrato')
-            ->assertJsonPath('data.assigned_user.id', $responsable->id);
+            ->assertJsonPath('data.assigned_user.id', $responsable->id)
+            ->assertJsonPath('data.prioridad', 'media')
+            ->assertJsonPath('data.estado', 'pendiente')
+            ->assertJsonPath('data.cliente_id', null)
+            ->assertJsonPath('data.contacto_id', null)
+            ->assertJsonPath('data.oportunidad_id', null);
 
         $this->putJson("/api/tareas/{$tareaId}", [
-            'cliente_id' => $cliente->id,
-            'contacto_id' => $contacto->id,
-            'oportunidad_id' => $oportunidad->id,
-            'assigned_user_id' => null,
+            'assigned_user_id' => $responsable->id,
             'titulo' => 'Enviar contrato',
             'descripcion' => 'Revision legal y comercial',
             'prioridad' => 'alta',
@@ -299,7 +291,7 @@ class CrmEntityApiTest extends ApiTestCase
             'fecha_vencimiento' => now()->addDays(5)->toIso8601String(),
         ])->assertOk()
             ->assertJsonPath('data.estado', 'en_progreso')
-            ->assertJsonPath('data.assigned_user', null);
+            ->assertJsonPath('data.assigned_user.id', $responsable->id);
 
         $this->deleteJson("/api/tareas/{$tareaId}")
             ->assertNoContent();

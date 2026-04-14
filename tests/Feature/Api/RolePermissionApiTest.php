@@ -63,6 +63,7 @@ class RolePermissionApiTest extends TestCase
         $this->actingAs($user);
 
         $this->getJson('/api/usuarios')->assertForbidden();
+        $this->getJson('/api/tareas')->assertForbidden();
         $this->postJson('/api/usuarios', [
             'name' => 'Otro',
             'email' => 'otro@example.com',

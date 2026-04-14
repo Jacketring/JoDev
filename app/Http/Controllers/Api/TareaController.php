@@ -18,20 +18,15 @@ class TareaController extends Controller
 
     public function index(Request $request)
     {
+        CrmAccess::adminOnly($request->user());
+
         $query = $this->applyArchivedFilter(
-            CrmAccess::applyClienteScope(
-                Tarea::query()->with(['cliente', 'contacto', 'oportunidad', 'assignedUser']),
-                $request->user()
-            ),
+            Tarea::query()->with(['assignedUser']),
             $request
         );
 
         $query
             ->search((string) $request->string('search'))
-            ->when(
-                $request->filled('cliente_id'),
-                fn ($builder) => $builder->where('cliente_id', $request->integer('cliente_id'))
-            )
             ->when(
                 $request->filled('prioridad'),
                 fn ($builder) => $builder->where('prioridad', $request->string('prioridad'))
@@ -55,8 +50,8 @@ class TareaController extends Controller
     {
         CrmAccess::adminOnly($request->user());
 
-        $tarea = Tarea::create($request->validated());
-        $tarea->load(['cliente', 'contacto', 'oportunidad', 'assignedUser']);
+        $tarea = Tarea::create($this->normalizePayload($request->validated()));
+        $tarea->load(['assignedUser']);
 
         return (new TareaResource($tarea))
             ->response()
@@ -65,30 +60,39 @@ class TareaController extends Controller
 
     public function show(Tarea $tarea): TareaResource
     {
-        CrmAccess::ensureCanAccessScopedCliente(request()->user(), $tarea->cliente_id);
+        CrmAccess::adminOnly(request()->user());
 
         return new TareaResource(
-            $tarea->loadMissing(['cliente', 'contacto', 'oportunidad', 'assignedUser'])
+            $tarea->loadMissing(['assignedUser'])
         );
     }
 
     public function update(UpdateTareaRequest $request, Tarea $tarea): TareaResource
     {
         CrmAccess::adminOnly($request->user());
-        CrmAccess::ensureCanAccessScopedCliente($request->user(), $tarea->cliente_id);
 
-        $tarea->update($request->validated());
+        $tarea->update($this->normalizePayload($request->validated()));
 
-        return new TareaResource($tarea->fresh()->load(['cliente', 'contacto', 'oportunidad', 'assignedUser']));
+        return new TareaResource($tarea->fresh()->load(['assignedUser']));
     }
 
     public function destroy(Tarea $tarea)
     {
         CrmAccess::adminOnly(request()->user());
-        CrmAccess::ensureCanAccessScopedCliente(request()->user(), $tarea->cliente_id);
 
         $tarea->delete();
 
         return response()->noContent();
+    }
+
+    protected function normalizePayload(array $data): array
+    {
+        $data['cliente_id'] = null;
+        $data['contacto_id'] = null;
+        $data['oportunidad_id'] = null;
+        $data['prioridad'] = $data['prioridad'] ?? 'media';
+        $data['estado'] = $data['estado'] ?? 'pendiente';
+
+        return $data;
     }
 }

@@ -91,21 +91,6 @@ class Tarea extends Model
                     $userQuery
                         ->where('name', 'like', $like)
                         ->orWhere('email', 'like', $like);
-                })
-                ->orWhereHas('cliente', function (Builder $clienteQuery) use ($like) {
-                    $clienteQuery
-                        ->where('empresa', 'like', $like)
-                        ->orWhere('nombre', 'like', $like)
-                        ->orWhere('apellidos', 'like', $like);
-                })
-                ->orWhereHas('contacto', function (Builder $contactoQuery) use ($like) {
-                    $contactoQuery
-                        ->where('nombre', 'like', $like)
-                        ->orWhere('apellidos', 'like', $like)
-                        ->orWhere('email', 'like', $like);
-                })
-                ->orWhereHas('oportunidad', function (Builder $oportunidadQuery) use ($like) {
-                    $oportunidadQuery->where('titulo', 'like', $like);
                 });
         });
     }
